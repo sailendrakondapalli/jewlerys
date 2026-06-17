@@ -178,7 +178,8 @@ export default function AdminProducts() {
     setForm({
       name: p.name || "", price: String(p.price || ""), category: p.category || categories[0] || "Bangles",
       description: p.description || "", size: p.category === BANGLE_CATEGORY ? (p.size || "") : "",
-      stock: String(p.stock || ""), tags: p.tags || [], images: p.images || [],
+      stock: p.stock !== undefined && p.stock !== null ? String(p.stock) : "",
+      tags: p.tags || [], images: p.images || [],
       custom_id: p.custom_id || "", series_id: p.series_id || "NS0",
     })
     setErrors({})
@@ -189,7 +190,7 @@ export default function AdminProducts() {
     const errs = {}
     if (!form.name.trim()) errs.name = "Name required"
     if (!form.price || isNaN(form.price) || Number(form.price) <= 0) errs.price = "Valid price required"
-    if (!form.stock || isNaN(form.stock) || Number(form.stock) < 0) errs.stock = "Valid stock required"
+    if (form.stock === "" || form.stock === null || form.stock === undefined || isNaN(form.stock) || Number(form.stock) < 0) errs.stock = "Valid stock required"
     if (form.images.length === 0) errs.images = "At least 1 image required"
     setErrors(errs)
     return Object.keys(errs).length === 0
@@ -209,19 +210,28 @@ export default function AdminProducts() {
         return
       }
     }
+    const stockValue = Number(form.stock)
+    // Separate stock from the rest of the payload — this prevents any DB trigger
+    // on product UPDATE from accidentally decrementing the stock we just set.
     const payload = {
       name: form.name.trim(), price: Math.floor(Number(form.price)), category: form.category,
-      // On edit: always keep the original custom_id — it's locked. On add: use what was typed (or null for auto-generate).
       custom_id: editProduct ? (editProduct.custom_id || null) : (form.custom_id?.trim() || null),
       description: form.description.trim(), size: form.category === BANGLE_CATEGORY ? (form.size.trim() || null) : null,
-      stock: Number(form.stock), tags: form.tags, images: form.images, series_id: form.series_id || 'NS0',
+      tags: form.tags, images: form.images, series_id: form.series_id || 'NS0',
     }
     try {
       if (editProduct) {
+        // 1. Update all fields except stock
         await updateProduct(editProduct.id, payload)
+        // 2. Update stock separately so it is set to the exact value regardless of any triggers
+        const { error: stockErr } = await supabase
+          .from("products")
+          .update({ stock: stockValue })
+          .eq("id", editProduct.id)
+        if (stockErr) throw new Error(stockErr.message)
         toast.success("Product updated!")
       } else {
-        await addProduct(payload)
+        await addProduct({ ...payload, stock: stockValue })
         toast.success("Product added!")
       }
       // Force reload so new/updated tags appear in the list
@@ -443,7 +453,13 @@ export default function AdminProducts() {
                   </div>
                   <div>
                     <label className="text-xs text-gray-400 mb-1 block">Stock *</label>
-                    <input type="number" value={form.stock} onChange={e => setForm(f => ({ ...f, stock: e.target.value }))}
+                    <input type="number" min="0" step="1" value={form.stock} onChange={e => {
+                        const val = e.target.value
+                        // Allow empty string while typing, but clamp to 0 minimum when a number is entered
+                        if (val === "" || val === "-") { setForm(f => ({ ...f, stock: "" })); return }
+                        const n = parseInt(val, 10)
+                        setForm(f => ({ ...f, stock: isNaN(n) ? "" : String(Math.max(0, n)) }))
+                      }}
                       className="w-full bg-white border border-gray-200 rounded-lg px-3 py-2.5 text-sm text-[#1A1A2E] focus:outline-none focus:border-[#1B2B5E]"
                       placeholder="15" />
                     {errors.stock && <p className="text-red-400 text-xs mt-1">{errors.stock}</p>}
