@@ -186,11 +186,24 @@ export default function ProductDetailPage() {
             {/* Tags */}
             {product.tags?.length > 0 && (
               <div className="flex flex-wrap gap-2 mb-6">
-                {product.tags.map(tag => (
-                  <span key={tag} className="flex items-center gap-1 px-2 py-1 bg-[#D4AF37]/10 text-[#D4AF37] text-xs rounded-full border border-[#D4AF37]/20">
-                    <Tag size={10} /> {tag}
-                  </span>
-                ))}
+                {product.tags.map((tag, i) => {
+                  const palettes = [
+                    { bg: "bg-rose-50",    border: "border-rose-200",    text: "text-rose-500"    },
+                    { bg: "bg-violet-50",  border: "border-violet-200",  text: "text-violet-500"  },
+                    { bg: "bg-sky-50",     border: "border-sky-200",     text: "text-sky-500"     },
+                    { bg: "bg-emerald-50", border: "border-emerald-200", text: "text-emerald-600" },
+                    { bg: "bg-amber-50",   border: "border-amber-200",   text: "text-amber-600"   },
+                    { bg: "bg-pink-50",    border: "border-pink-200",    text: "text-pink-500"    },
+                    { bg: "bg-indigo-50",  border: "border-indigo-200",  text: "text-indigo-500"  },
+                    { bg: "bg-teal-50",    border: "border-teal-200",    text: "text-teal-600"    },
+                  ]
+                  const p = palettes[i % palettes.length]
+                  return (
+                    <span key={tag} className={`flex items-center gap-1 px-3 py-1 ${p.bg} ${p.text} text-xs rounded-full border ${p.border} font-medium`}>
+                      <Tag size={10} /> {tag}
+                    </span>
+                  )
+                })}
               </div>
             )}
 
