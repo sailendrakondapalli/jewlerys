@@ -19,8 +19,11 @@ export default defineConfig({
       'cod-unfixable-unsaid.ngrok-free.dev'
     ],
 
-    hmr: {
-      clientPort: 443,
+    hmr: true,
+
+    watch: {
+      usePolling: true,
+      interval: 300,
     }
   }
 })

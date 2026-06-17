@@ -151,10 +151,17 @@ export default function AdminProducts() {
   // Build dynamic tag list: hardcoded defaults + any custom tags used across all products
   const allTags = [...new Set([...TAGS, ...products.flatMap(p => p.tags || [])])].sort()
 
-  const filtered = products.filter(p =>
-    p.name?.toLowerCase().includes(search.toLowerCase()) ||
-    p.category?.toLowerCase().includes(search.toLowerCase())
-  )
+  const [activeCategory, setActiveCategory] = useState("All")
+
+  // Reset page when category tab or search changes
+  useEffect(() => { setPage(1) }, [activeCategory, search])
+
+  const filtered = products.filter(p => {
+    const matchesSearch = p.name?.toLowerCase().includes(search.toLowerCase()) ||
+      p.category?.toLowerCase().includes(search.toLowerCase())
+    const matchesCategory = activeCategory === "All" || p.category === activeCategory
+    return matchesSearch && matchesCategory
+  })
 
   const totalPages = Math.ceil(filtered.length / pageSize)
   const pagedProducts = filtered.slice((page - 1) * pageSize, page * pageSize)
@@ -265,10 +272,29 @@ export default function AdminProducts() {
         </button>
       </div>
 
-      <div className="relative">
-        <Search size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500" />
-        <input value={search} onChange={e => { setSearch(e.target.value); setPage(1) }} placeholder="Search products..."
-          className="w-full bg-white border border-gray-200 rounded-lg pl-9 pr-4 py-2.5 text-sm text-[#1A1A2E] placeholder-gray-600 focus:outline-none focus:border-[#1B2B5E]" />
+      {/* Search + Category Tabs Row */}
+      <div className="flex flex-wrap items-center gap-3">
+        <div className="relative flex-1 min-w-[180px]">
+          <Search size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500" />
+          <input value={search} onChange={e => { setSearch(e.target.value); setPage(1) }} placeholder="Search products..."
+            className="w-full bg-white border border-gray-200 rounded-lg pl-9 pr-4 py-2.5 text-sm text-[#1A1A2E] placeholder-gray-600 focus:outline-none focus:border-[#1B2B5E]" />
+        </div>
+        {/* Category filter pills */}
+        <div className="flex flex-wrap gap-2">
+          {["All", ...categories].map(cat => (
+            <button
+              key={cat}
+              onClick={() => setActiveCategory(cat)}
+              className={`px-3 py-1.5 rounded-full text-xs font-medium transition-all whitespace-nowrap ${
+                activeCategory === cat
+                  ? "bg-[#C9956C] text-white"
+                  : "bg-white border border-gray-200 text-gray-500 hover:border-[#C9956C] hover:text-[#C9956C]"
+              }`}
+            >
+              {cat}
+            </button>
+          ))}
+        </div>
       </div>
 
       <div className="bg-white border border-gray-200 rounded-xl overflow-hidden">
