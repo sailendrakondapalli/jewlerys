@@ -187,20 +187,16 @@ export default function ProductDetailPage() {
             {product.tags?.length > 0 && (
               <div className="flex flex-wrap gap-2 mb-6">
                 {product.tags.map((tag, i) => {
+                  // Brand-tonal palette: navy, gold, terracotta — 3 tones each
                   const palettes = [
-                    { bg: "bg-rose-50",    border: "border-rose-200",    text: "text-rose-500"    },
-                    { bg: "bg-violet-50",  border: "border-violet-200",  text: "text-violet-500"  },
-                    { bg: "bg-sky-50",     border: "border-sky-200",     text: "text-sky-500"     },
-                    { bg: "bg-emerald-50", border: "border-emerald-200", text: "text-emerald-600" },
-                    { bg: "bg-amber-50",   border: "border-amber-200",   text: "text-amber-600"   },
-                    { bg: "bg-pink-50",    border: "border-pink-200",    text: "text-pink-500"    },
-                    { bg: "bg-indigo-50",  border: "border-indigo-200",  text: "text-indigo-500"  },
-                    { bg: "bg-teal-50",    border: "border-teal-200",    text: "text-teal-600"    },
+                    { bg: "bg-[#1B2B5E]/8",  border: "border-[#1B2B5E]/20", text: "text-[#1B2B5E]"  },
+                    { bg: "bg-[#D4AF37]/10", border: "border-[#D4AF37]/30", text: "text-[#A8870A]"  },
+                    { bg: "bg-[#C9956C]/10", border: "border-[#C9956C]/30", text: "text-[#9E6B3F]"  },
                   ]
                   const p = palettes[i % palettes.length]
                   return (
-                    <span key={tag} className={`flex items-center gap-1 px-3 py-1 ${p.bg} ${p.text} text-xs rounded-full border ${p.border} font-medium`}>
-                      <Tag size={10} /> {tag}
+                    <span key={tag} className={`flex items-center gap-1.5 px-3 py-1 ${p.bg} ${p.text} text-xs rounded-full border ${p.border} font-medium tracking-wide`}>
+                      <Tag size={9} /> {tag}
                     </span>
                   )
                 })}
