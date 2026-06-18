@@ -118,8 +118,10 @@ export default function HomePage() {
         ) : (
           <img src={heroBgImg} alt="NaShe Jewels hero" className="absolute inset-0 w-full h-full object-cover object-center" />
         )}
-        {/* Gradient overlay */}
-        <div className="absolute inset-0 bg-gradient-to-r from-black/60 via-black/30 to-transparent" />
+        {/* Gradient overlay — left dark for text, fades right */}
+        <div className="absolute inset-0 bg-gradient-to-r from-black/70 via-black/40 to-black/10" />
+        {/* Extra soft vignette on top and bottom */}
+        <div className="absolute inset-0 bg-gradient-to-b from-black/20 via-transparent to-black/30" />
 
         {/* Text content — left side, over the empty cream area of the photo */}
         <div className="relative h-full max-w-7xl mx-auto px-4 sm:px-8 flex items-center" style={{ minHeight: "inherit" }}>
