@@ -288,7 +288,10 @@ export default function AdminOrders() {
 
   const handleRefresh = async () => {
     setRefreshing(true)
-    await loadOrders()
+    setSearch("")
+    setActiveTab("all")
+    setPage(1)
+    await loadOrders(true)
     setRefreshing(false)
     toast.success("Orders refreshed")
   }
