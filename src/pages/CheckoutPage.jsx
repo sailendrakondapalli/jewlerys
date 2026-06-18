@@ -406,7 +406,7 @@ export default function CheckoutPage() {
                         `Paid to: ${UPI_ID}`,
                         `Transaction ID / UTR number`,
                       ].map((text, i) => (
-                        <li key={i} className="text-[#059669] text-sm font-medium flex items-center gap-2">
+                        <li key={i} className="text-[#A04000] text-sm font-medium flex items-center gap-2">
                           <span className="inline-flex items-center justify-center w-5 h-5 bg-[#34D399] rounded text-white text-xs font-bold flex-shrink-0">✓</span> {text}
                         </li>
                       ))}
