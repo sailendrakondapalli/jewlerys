@@ -1,4 +1,5 @@
 import { useEffect, useState, useRef } from "react"
+import { useSearchParams } from "react-router-dom"
 import { motion, AnimatePresence } from "framer-motion"
 import { Plus, Edit2, Trash2, Search, AlertTriangle, X, Upload, ImagePlus, Loader2 } from "lucide-react"
 import { useAdminStore } from "../../store/adminStore"
@@ -131,6 +132,7 @@ function ImageUploader({ images, onImagesChange, uploading, setUploading }) {
 export default function AdminProducts() {
   const { products, loadProducts, addProduct, updateProduct, deleteProduct } = useAdminStore()
   const { categories, loadCategories } = useCategoryStore()
+  const [searchParams, setSearchParams] = useSearchParams()
   const [search, setSearch] = useState("")
   const [modalOpen, setModalOpen] = useState(false)
   const [editProduct, setEditProduct] = useState(null)
@@ -156,11 +158,14 @@ export default function AdminProducts() {
   // Reset page when category tab or search changes
   useEffect(() => { setPage(1) }, [activeCategory, search])
 
+  const stockFilter = searchParams.get("stock") // "low" = stock < 10
+
   const filtered = products.filter(p => {
     const matchesSearch = p.name?.toLowerCase().includes(search.toLowerCase()) ||
       p.category?.toLowerCase().includes(search.toLowerCase())
     const matchesCategory = activeCategory === "All" || p.category === activeCategory
-    return matchesSearch && matchesCategory
+    const matchesStock = stockFilter === "low" ? (p.stock || 0) < 10 : true
+    return matchesSearch && matchesCategory && matchesStock
   })
 
   const totalPages = Math.ceil(filtered.length / pageSize)
@@ -281,6 +286,23 @@ export default function AdminProducts() {
           <Plus size={16} /> Add Product
         </button>
       </div>
+
+      {/* Low stock filter banner */}
+      {stockFilter === "low" && (
+        <div className="flex items-center justify-between bg-red-50 border border-red-200 rounded-xl px-4 py-3">
+          <div className="flex items-center gap-2">
+            <AlertTriangle size={15} className="text-red-500 flex-shrink-0" />
+            <p className="text-red-700 text-sm font-medium">
+              Showing {filtered.length} low stock product{filtered.length !== 1 ? "s" : ""} (stock &lt; 10)
+            </p>
+          </div>
+          <button
+            onClick={() => setSearchParams({})}
+            className="flex items-center gap-1 text-xs text-red-500 hover:text-red-700 font-medium transition-colors">
+            <X size={12} /> Clear filter
+          </button>
+        </div>
+      )}
 
       {/* Search + Category Tabs Row */}
       <div className="flex flex-wrap items-center gap-3">

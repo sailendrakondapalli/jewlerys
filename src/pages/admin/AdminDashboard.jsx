@@ -179,7 +179,7 @@ export default function AdminDashboard() {
         <StatCard icon={ShoppingBag} label="Total Orders" value={stats.totalOrders} sub={`${stats.paidOrders} paid`} color="gold" to="/admin/orders" />
         <StatCard icon={DollarSign} label="Total Revenue" value={formatINR(stats.totalRevenue)} sub="from paid orders" color="green" to="/admin/analytics" />
         <StatCard icon={Package} label="Products" value={stats.totalProducts} color="blue" to="/admin/products" />
-        <StatCard icon={AlertTriangle} label="Low Stock" value={stats.lowStockCount} sub="< 10 items" color="red" to="/admin/products" />
+        <StatCard icon={AlertTriangle} label="Low Stock" value={stats.lowStockCount} sub="< 10 items" color="red" to="/admin/products?stock=low" />
         <StatCard icon={Clock} label="Today's Orders" value={stats.todayOrdersCount} color="gold" to="/admin/orders?filter=today" />
       </div>
 
