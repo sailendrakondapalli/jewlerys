@@ -195,8 +195,8 @@ export default function ProductDetailPage() {
                   ]
                   const p = palettes[i % palettes.length]
                   return (
-                    <span key={tag} className={`flex items-center gap-1.5 px-3 py-1 ${p.bg} ${p.text} text-xs rounded-full border ${p.border} font-medium tracking-wide`}>
-                      <Tag size={9} /> {tag}
+                    <span key={tag} className={`flex items-center gap-1.5 px-4 py-1.5 ${p.bg} ${p.text} text-sm rounded-full border ${p.border} font-semibold tracking-wide`}>
+                      <Tag size={11} /> {tag}
                     </span>
                   )
                 })}
