@@ -280,7 +280,11 @@ export default function AdminProducts() {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold text-[#1B2B5E]" style={{ fontFamily: "Georgia, serif" }}>Products</h1>
-          <p className="text-gray-500 text-sm mt-1">{products.length} total products</p>
+          <p className="text-gray-500 text-sm mt-1">
+            {filtered.length === products.length
+              ? `${products.length} total products`
+              : `${filtered.length} of ${products.length} products`}
+          </p>
         </div>
         <button onClick={openAdd} className="flex items-center gap-2 px-4 py-2 bg-[#1B2B5E] text-white font-semibold rounded-lg hover:bg-[#2A3F7E] transition-all text-sm">
           <Plus size={16} /> Add Product
