@@ -390,28 +390,30 @@ export default function CheckoutPage() {
 
                 {/* Screenshot upload card */}
                 <div className="bg-white border border-[#E8E0D5] rounded-2xl p-5 shadow-sm space-y-4">
-                  <h3 className="text-[#1A1A2E] font-semibold text-sm flex items-center gap-2">
-                    <Upload size={15} className="text-[#C9956C]" /> Upload Payment Screenshot <span className="text-red-400">*</span>
+                  <h3 className="text-[#1A1A2E] font-semibold text-base flex items-center gap-2">
+                    <Upload size={15} className="text-[#C9956C]" /> Upload Payment Screenshot <span className="text-red-500">*</span>
                   </h3>
 
                   {/* What screenshot must show */}
-                  <div className="bg-[#FEF2F2] border border-[#FECACA] rounded-xl p-4 space-y-2">
-                    <p className="text-[#DC2626] text-sm font-bold flex items-center gap-1.5">
-                      <AlertCircle size={14} className="text-[#DC2626]" /> Screenshot must clearly show:
+                  <div className="bg-[#FFF5F2] border border-[#FFCAB8] rounded-2xl p-4 space-y-2">
+                    <p className="text-[#C0392B] text-sm font-bold flex items-center gap-1.5">
+                      <span className="text-base">ⓘ</span> Screenshot must clearly show:
                     </p>
-                    {[
-                      `Payment Success message`,
-                      `Amount: ₹${grandTotal.toLocaleString("en-IN")}`,
-                      `Paid to: ${UPI_ID}`,
-                      `Transaction ID / UTR number`,
-                    ].map((text, i) => (
-                      <p key={i} className="text-[#16A34A] text-sm flex items-center gap-2">
-                        <span className="text-base">✅</span> {text}
-                      </p>
-                    ))}
-                    <div className="border-t border-[#FECACA] pt-2 mt-1">
-                      <p className="text-[#DC2626] text-sm font-semibold flex items-center gap-1.5">
-                        <AlertCircle size={13} /> Wrong or unclear screenshots will be rejected and order cancelled.
+                    <ul className="space-y-1.5 ml-1">
+                      {[
+                        `Payment Success message`,
+                        `Amount: ₹${grandTotal.toLocaleString("en-IN")}`,
+                        `Paid to: ${UPI_ID}`,
+                        `Transaction ID / UTR number`,
+                      ].map((text, i) => (
+                        <li key={i} className="text-[#27AE60] text-sm flex items-center gap-2">
+                          <span className="text-base leading-none">✅</span> {text}
+                        </li>
+                      ))}
+                    </ul>
+                    <div className="border-t border-[#FFCAB8] pt-2 mt-1">
+                      <p className="text-[#C0392B] text-sm font-semibold flex items-center gap-1.5">
+                        <span className="text-base">⚠️</span> Wrong or unclear screenshots will be rejected and order cancelled.
                       </p>
                     </div>
                   </div>
