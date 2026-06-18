@@ -375,8 +375,8 @@ export default function CheckoutPage() {
                     </p>
 
                     {/* How to pay */}
-                    <div className="bg-[#EFF6FF] border border-[#93C5FD] rounded-xl p-4">
-                      <p className="text-[#1D4ED8] text-sm font-bold mb-2">How to pay:</p>
+                    <div className="bg-[#DBEAFE] border border-[#93C5FD] rounded-xl p-4">
+                      <p className="text-[#1E3A8A] text-sm font-bold mb-2">How to pay:</p>
                       <ol className="text-[#1E40AF] text-sm space-y-1.5 list-decimal list-inside">
                         <li>Scan the QR code or tap "Open UPI App" above</li>
                         <li>Amount ₹{grandTotal.toLocaleString("en-IN")} will be auto-filled — confirm and pay</li>
@@ -395,23 +395,25 @@ export default function CheckoutPage() {
                   </h3>
 
                   {/* What screenshot must show */}
-                  <div className="bg-red-50 border border-red-300 rounded-xl p-4 space-y-1.5">
-                    <p className="text-red-700 text-sm font-bold flex items-center gap-1.5">
-                      <AlertCircle size={14} /> Screenshot must clearly show:
+                  <div className="bg-[#FEF2F2] border border-[#FECACA] rounded-xl p-4 space-y-2">
+                    <p className="text-[#DC2626] text-sm font-bold flex items-center gap-1.5">
+                      <AlertCircle size={14} className="text-[#DC2626]" /> Screenshot must clearly show:
                     </p>
                     {[
-                      { icon: "✅", text: "Payment Success message" },
-                      { icon: "✅", text: `Amount: ₹${grandTotal.toLocaleString("en-IN")}` },
-                      { icon: "✅", text: `Paid to: ${UPI_ID}` },
-                      { icon: "✅", text: "Transaction ID / UTR number" },
-                    ].map((item, i) => (
-                      <p key={i} className="text-red-700 text-sm flex items-center gap-1.5">
-                        <span>{item.icon}</span> {item.text}
+                      `Payment Success message`,
+                      `Amount: ₹${grandTotal.toLocaleString("en-IN")}`,
+                      `Paid to: ${UPI_ID}`,
+                      `Transaction ID / UTR number`,
+                    ].map((text, i) => (
+                      <p key={i} className="text-[#16A34A] text-sm flex items-center gap-2">
+                        <span className="text-base">✅</span> {text}
                       </p>
                     ))}
-                    <p className="text-red-600 text-sm font-semibold flex items-center gap-1 mt-2 pt-2 border-t border-red-200">
-                      <AlertCircle size={12} /> Wrong or unclear screenshots will be rejected and order cancelled.
-                    </p>
+                    <div className="border-t border-[#FECACA] pt-2 mt-1">
+                      <p className="text-[#DC2626] text-sm font-semibold flex items-center gap-1.5">
+                        <AlertCircle size={13} /> Wrong or unclear screenshots will be rejected and order cancelled.
+                      </p>
+                    </div>
                   </div>
 
                   {/* UPI Transaction Reference */}
