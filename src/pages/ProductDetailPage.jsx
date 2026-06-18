@@ -31,7 +31,11 @@ export default function ProductDetailPage() {
   useEffect(() => {
     setLoading(true)
     setImgIdx(0)
-    Promise.all([fetchProductById(id), fetchProducts(), fetchActiveCodes()]).then(([prod, all, codes]) => {
+    Promise.all([
+      fetchProductById(id),
+      fetchProducts(),
+      fetchActiveCodes().catch(() => []) // graceful fallback if table doesn't exist yet
+    ]).then(([prod, all, codes]) => {
       const finalProd = prod || all.find(p => p.custom_id === id) || null
       setProduct(finalProd)
       setAllProducts(all)
