@@ -36,6 +36,11 @@ export default function HomePage() {
   const [features, setFeatures] = useState(DEFAULT_FEATURES)
   const [dynamicCategories, setDynamicCategories] = useState(CATEGORIES)
   const [categoryImageMap, setCategoryImageMap] = useState({})
+  const [heroVideoUrl, setHeroVideoUrl] = useState("")
+
+  useEffect(() => {
+    getSetting('hero_video_url').then(url => { if (url) setHeroVideoUrl(url) }).catch(() => {})
+  }, [])
 
   useEffect(() => {
     fetchProducts({ sort: "newest" }).then(data => {
@@ -100,9 +105,20 @@ export default function HomePage() {
 
       {/* HERO */}
       <section className="relative overflow-hidden" style={{ minHeight: "clamp(280px, 55vw, 600px)" }}>
-        {/* Full bleed background image */}
-        <img src={heroBgImg} alt="NaShe Jewels hero" className="absolute inset-0 w-full h-full object-cover object-center" />
-        {/* Gradient overlay — stronger on left for text readability, fades to transparent on right */}
+        {/* Full bleed background — video if set, else fallback image */}
+        {heroVideoUrl ? (
+          <video
+            src={heroVideoUrl}
+            autoPlay
+            muted
+            loop
+            playsInline
+            className="absolute inset-0 w-full h-full object-cover object-center"
+          />
+        ) : (
+          <img src={heroBgImg} alt="NaShe Jewels hero" className="absolute inset-0 w-full h-full object-cover object-center" />
+        )}
+        {/* Gradient overlay */}
         <div className="absolute inset-0 bg-gradient-to-r from-[#FAF8F5]/90 via-[#FAF8F5]/50 to-transparent" />
 
         {/* Text content — left side, over the empty cream area of the photo */}
