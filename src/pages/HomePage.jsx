@@ -36,10 +36,10 @@ export default function HomePage() {
   const [features, setFeatures] = useState(DEFAULT_FEATURES)
   const [dynamicCategories, setDynamicCategories] = useState(CATEGORIES)
   const [categoryImageMap, setCategoryImageMap] = useState({})
-  const [heroVideoUrl, setHeroVideoUrl] = useState("")
+  const [heroVideoUrl, setHeroVideoUrl] = useState(null) // null = still loading, "" = loaded but no video
 
   useEffect(() => {
-    getSetting('hero_video_url').then(url => { if (url) setHeroVideoUrl(url) }).catch(() => {})
+    getSetting('hero_video_url').then(url => setHeroVideoUrl(url || "")).catch(() => setHeroVideoUrl(""))
   }, [])
 
   useEffect(() => {
@@ -105,8 +105,10 @@ export default function HomePage() {
 
       {/* HERO */}
       <section className="relative overflow-hidden" style={{ minHeight: "clamp(320px, 60vw, 650px)" }}>
-        {/* Full bleed background — video if set, else fallback image */}
-        {heroVideoUrl ? (
+        {/* Full bleed background — null=loading(dark), video if set, else static image */}
+        {heroVideoUrl === null ? (
+          <div className="absolute inset-0 bg-[#1A1A2E]" />
+        ) : heroVideoUrl ? (
           <video
             src={heroVideoUrl}
             autoPlay
