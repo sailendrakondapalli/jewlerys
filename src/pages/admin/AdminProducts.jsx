@@ -162,7 +162,8 @@ export default function AdminProducts() {
 
   const filtered = products.filter(p => {
     const matchesSearch = p.name?.toLowerCase().includes(search.toLowerCase()) ||
-      p.category?.toLowerCase().includes(search.toLowerCase())
+      p.category?.toLowerCase().includes(search.toLowerCase()) ||
+      p.custom_id?.toLowerCase().includes(search.toLowerCase())
     const matchesCategory = activeCategory === "All" || p.category === activeCategory
     const matchesStock = stockFilter === "low" ? (p.stock || 0) < 10 : true
     return matchesSearch && matchesCategory && matchesStock
