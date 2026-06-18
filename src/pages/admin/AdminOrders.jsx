@@ -387,7 +387,9 @@ export default function AdminOrders() {
             {filterToday ? "Today's Orders" : "Orders"}
           </h1>
           <p className="text-gray-500 text-sm mt-0.5">
-            {localOrders.length} total orders
+            {filtered.length === localOrders.length
+              ? `${localOrders.length} total orders`
+              : `${filtered.length} of ${localOrders.length} orders`}
           </p>
         </div>
         <button onClick={handleRefresh} disabled={refreshing}
