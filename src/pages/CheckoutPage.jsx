@@ -1,11 +1,12 @@
 ﻿import { useState, useEffect, useRef } from "react"
 import { useNavigate, useLocation } from "react-router-dom"
 import { motion } from "framer-motion"
-import { MapPin, Plus, Check, CheckCircle, Upload, Copy, Smartphone, AlertCircle, Loader2, Zap } from "lucide-react"
+import { MapPin, Plus, Check, CheckCircle, Upload, Copy, Smartphone, AlertCircle, Loader2, Zap, Ticket, X as XIcon } from "lucide-react"
 import { useCartStore } from "../store/cartStore"
 import { useAuthStore } from "../store/authStore"
 import { saveOrder } from "../services/orderService"
 import { fetchAddresses, saveAddress } from "../services/addressService"
+import { validatePromoCode, recordPromoUse } from "../services/promoService"
 import { supabase } from "../lib/supabase"
 import { formatINR } from "../utils/format"
 import toast from "react-hot-toast"
@@ -98,6 +99,38 @@ export default function CheckoutPage() {
   const total = items.reduce((s, i) => s + (i.products?.price || 0) * i.quantity, 0)
   const fileRef = useRef(null)
 
+  // Promo code state
+  const [promoInput, setPromoInput] = useState("")
+  const [appliedPromo, setAppliedPromo] = useState(null) // { promo, discountAmount }
+  const [promoLoading, setPromoLoading] = useState(false)
+
+  const cartCategories = items.map(i => i.products?.category).filter(Boolean)
+
+  const applyPromo = async () => {
+    if (!promoInput.trim()) return
+    setPromoLoading(true)
+    try {
+      const selectedAddr = addresses.find(a => a.id === selectedId)
+      const shipping = getShippingCost(selectedAddr)
+      const result = await validatePromoCode({
+        code: promoInput.trim(),
+        userId: user?.id,
+        cartTotal: total + shipping,
+        cartCategories,
+      })
+      if (result.valid) {
+        setAppliedPromo(result)
+        toast.success(`Code applied! You save ${formatINR(result.discountAmount)}`)
+      } else {
+        toast.error(result.message)
+        setAppliedPromo(null)
+      }
+    } catch { toast.error("Failed to validate code") }
+    finally { setPromoLoading(false) }
+  }
+
+  const removePromo = () => { setAppliedPromo(null); setPromoInput("") }
+
   // Shipping cost based on state
   const getShippingCost = (addr) => {
     if (!addr) return 100
@@ -164,6 +197,7 @@ export default function CheckoutPage() {
     setSubmitting(true)
     try {
       const shipping = getShippingCost(addr)
+      const discount = appliedPromo?.discountAmount || 0
 
       // Upload screenshot to Supabase Storage (product-images bucket is public)
       const ext = screenshot.name.split(".").pop()
@@ -191,7 +225,8 @@ export default function CheckoutPage() {
         const groupSubtotal = groupItems.reduce((s, i) => s + (i.products?.price || 0) * i.quantity, 0)
         // Distribute shipping proportionally — or add full shipping to first group only
         const isFirstGroup = createdOrderIds.length === 0
-        const groupTotal = groupSubtotal + (isFirstGroup ? shipping : 0)
+        // Apply discount only to first group
+        const groupTotal = groupSubtotal + (isFirstGroup ? shipping : 0) - (isFirstGroup ? discount : 0)
 
         // Generate sequential order ID: NS0-001, NS0-002 / NS1-001, NS1-002
         const { data: seqData, error: seqErr } = await supabase.rpc("get_next_series_number", { p_series: series })
@@ -226,6 +261,11 @@ export default function CheckoutPage() {
 
       // Clear cart only for normal cart checkout — Buy Now doesn't touch the cart
       if (!isBuyNow) await clearCart(user.id)
+
+      // Record promo code usage so one-time codes get disabled for this user
+      if (appliedPromo?.promo) {
+        await recordPromoUse({ codeId: appliedPromo.promo.id, userId: user.id, orderId: null })
+      }
 
       setStep("success")
       toast.success("Order placed! Awaiting payment verification.")
@@ -313,7 +353,8 @@ export default function CheckoutPage() {
           {step === "payment" && (() => {
             const selectedAddr = addresses.find(a => a.id === selectedId)
             const shipping = getShippingCost(selectedAddr)
-            const grandTotal = Math.ceil(total + shipping)
+            const discount = appliedPromo?.discountAmount || 0
+            const grandTotal = Math.ceil(total + shipping - discount)
             const upiDeepLink = `upi://pay?pa=${UPI_ID}&pn=NaShe+Jewels&am=${grandTotal}&cu=INR&tn=NaShe+Jewels+Order`
             return (
               <div className="space-y-4">
@@ -481,7 +522,8 @@ export default function CheckoutPage() {
             {(() => {
               const selectedAddr = addresses.find(a => a.id === selectedId)
               const shipping = getShippingCost(selectedAddr)
-              const grandTotal = total + shipping
+              const discount = appliedPromo?.discountAmount || 0
+              const grandTotal = total + shipping - discount
               return (
                 <>
                   <div className="flex justify-between text-sm">
@@ -492,6 +534,12 @@ export default function CheckoutPage() {
                     <span className="text-[#4A4A6A]">Shipping</span>
                     <span className="text-[#C9956C] font-medium">+{formatINR(shipping)}</span>
                   </div>
+                  {discount > 0 && (
+                    <div className="flex justify-between text-sm">
+                      <span className="text-green-600 flex items-center gap-1"><Ticket size={12} /> {appliedPromo.promo.code}</span>
+                      <span className="text-green-600 font-medium">-{formatINR(discount)}</span>
+                    </div>
+                  )}
                   {selectedAddr && (
                     <p className="text-[#8A8AAA] text-xs">
                       {["andhra pradesh","telangana","ap","ts"].some(s => (selectedAddr.state||"").toLowerCase().includes(s))
@@ -507,6 +555,36 @@ export default function CheckoutPage() {
               )
             })()}
           </div>
+
+          {/* Promo code input */}
+          {step === "payment" && (
+            <div className="mb-4">
+              {appliedPromo ? (
+                <div className="flex items-center justify-between bg-green-50 border border-green-200 rounded-xl px-3 py-2.5">
+                  <div className="flex items-center gap-2">
+                    <Ticket size={14} className="text-green-600" />
+                    <span className="text-green-700 text-sm font-semibold">{appliedPromo.promo.code}</span>
+                    <span className="text-green-600 text-xs">-{formatINR(appliedPromo.discountAmount)} saved</span>
+                  </div>
+                  <button onClick={removePromo} className="text-green-400 hover:text-red-500 transition-colors">
+                    <XIcon size={14} />
+                  </button>
+                </div>
+              ) : (
+                <div className="flex gap-2">
+                  <input value={promoInput} onChange={e => setPromoInput(e.target.value.toUpperCase())}
+                    onKeyDown={e => e.key === "Enter" && applyPromo()}
+                    placeholder="Promo code"
+                    className="flex-1 bg-white border border-[#E8E0D5] rounded-lg px-3 py-2 text-sm text-[#1A1A2E] placeholder-[#8A8AAA] focus:outline-none focus:border-[#C9956C]" />
+                  <button onClick={applyPromo} disabled={promoLoading || !promoInput.trim()}
+                    className="px-3 py-2 bg-[#C9956C] text-white text-sm font-semibold rounded-lg hover:bg-[#b5824f] disabled:opacity-50 flex items-center gap-1">
+                    {promoLoading ? <Loader2 size={13} className="animate-spin" /> : "Apply"}
+                  </button>
+                </div>
+              )}
+            </div>
+          )}
+
           <p className="text-[#8A8AAA] text-xs text-center">🔒 UPI Payment · Secure &amp; Safe</p>
         </div>
       </div>

@@ -2,8 +2,9 @@
 import { useParams, useNavigate } from 'react-router-dom'
 import { Helmet } from 'react-helmet-async'
 import { motion } from 'framer-motion'
-import { ShoppingCart, Heart, Zap, ChevronLeft, ChevronRight, Star, Tag } from 'lucide-react'
+import { ShoppingCart, Heart, Zap, ChevronLeft, ChevronRight, Star, Tag, Ticket, Copy } from 'lucide-react'
 import { fetchProductById, fetchProducts } from '../services/productService'
+import { fetchActiveCodes } from '../services/promoService'
 import { useAuthStore } from '../store/authStore'
 import { useCartStore } from '../store/cartStore'
 import { useWishlistStore } from '../store/wishlistStore'
@@ -25,15 +26,18 @@ export default function ProductDetailPage() {
   const [allProducts, setAllProducts] = useState([])
   const [loading, setLoading] = useState(true)
   const [imgIdx, setImgIdx] = useState(0)
+  const [promoCodes, setPromoCodes] = useState([])
 
   useEffect(() => {
     setLoading(true)
     setImgIdx(0)
-    Promise.all([fetchProductById(id), fetchProducts()]).then(([prod, all]) => {
+    Promise.all([fetchProductById(id), fetchProducts(), fetchActiveCodes()]).then(([prod, all, codes]) => {
       const finalProd = prod || all.find(p => p.custom_id === id) || null
       setProduct(finalProd)
       setAllProducts(all)
       if (finalProd) addProduct(finalProd)
+      // Filter codes applicable to this product's category (or all categories)
+      setPromoCodes(codes.filter(c => !c.applicable_category || c.applicable_category === finalProd?.category))
       setLoading(false)
     })
   }, [id])
@@ -200,6 +204,37 @@ export default function ProductDetailPage() {
                     </span>
                   )
                 })}
+              </div>
+            )}
+
+            {/* Promo Codes */}
+            {promoCodes.length > 0 && (
+              <div className="mb-5">
+                <p className="text-[#1A1A2E] text-sm font-semibold flex items-center gap-1.5 mb-2">
+                  <Ticket size={15} className="text-[#C9956C]" /> Available Offers
+                </p>
+                <div className="space-y-2">
+                  {promoCodes.map(code => (
+                    <div key={code.id} className="flex items-center justify-between bg-[#FFF8F0] border border-[#C9956C]/30 rounded-xl px-3 py-2.5">
+                      <div className="flex items-center gap-2 flex-1 min-w-0">
+                        <span className="font-mono font-bold text-[#C9956C] bg-[#C9956C]/10 px-2 py-0.5 rounded text-sm flex-shrink-0">{code.code}</span>
+                        <div className="min-w-0">
+                          <p className="text-[#1A1A2E] text-xs font-medium truncate">
+                            {code.discount_type === 'percentage' ? `${code.discount_value}% off` : `₹${code.discount_value} off`}
+                            {code.min_order_amount > 0 && ` on orders above ₹${code.min_order_amount.toLocaleString('en-IN')}`}
+                          </p>
+                          {code.description && <p className="text-[#8A8AAA] text-xs truncate">{code.description}</p>}
+                        </div>
+                      </div>
+                      <button
+                        onClick={() => { navigator.clipboard.writeText(code.code); toast.success(`Code "${code.code}" copied!`) }}
+                        className="flex items-center gap-1 text-xs text-[#C9956C] hover:text-[#b5824f] font-semibold flex-shrink-0 ml-2"
+                      >
+                        <Copy size={12} /> Copy
+                      </button>
+                    </div>
+                  ))}
+                </div>
               </div>
             )}
 

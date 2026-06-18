@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect } from "react"
 import { Link, useLocation, useNavigate } from "react-router-dom"
 import { motion, AnimatePresence } from "framer-motion"
-import { LayoutDashboard, Package, ShoppingBag, BarChart3, Users, Bell, Menu, X, LogOut, ChevronRight, AlertTriangle, Store, Image, Tag } from "lucide-react"
+import { LayoutDashboard, Package, ShoppingBag, BarChart3, Users, Bell, Menu, X, LogOut, ChevronRight, AlertTriangle, Store, Image, Tag, Ticket } from "lucide-react"
 import { useAuthStore } from "../../store/authStore"
 import { useAdminStore } from "../../store/adminStore"
 import { supabase } from "../../lib/supabase"
@@ -12,6 +12,7 @@ const NAV = [
   { path: "/admin/products", label: "Products", icon: Package },
   { path: "/admin/orders", label: "Orders", icon: ShoppingBag },
   { path: "/admin/categories", label: "Categories", icon: Tag },
+  { path: "/admin/promo-codes", label: "Promo Codes", icon: Ticket },
   { path: "/admin/banners", label: "Banners", icon: Image },
   { path: "/admin/analytics", label: "Analytics", icon: BarChart3 },
   { path: "/admin/users", label: "Users", icon: Users },
