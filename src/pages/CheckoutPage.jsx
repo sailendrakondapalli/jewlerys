@@ -310,128 +310,156 @@ export default function CheckoutPage() {
             </div>
           )}
 
-          {step === "payment" && (
-            <div className="space-y-4">
-              {/* UPI Payment */}
-              <div className="bg-white border border-[#E8E0D5] rounded-xl p-5 shadow-sm">
-                <h2 className="text-[#1A1A2E] font-semibold mb-4 flex items-center gap-2">
-                  <Smartphone size={16} className="text-[#C9956C]" /> Pay via UPI
-                </h2>
+          {step === "payment" && (() => {
+            const selectedAddr = addresses.find(a => a.id === selectedId)
+            const shipping = getShippingCost(selectedAddr)
+            const grandTotal = Math.ceil(total + shipping)
+            const upiDeepLink = `upi://pay?pa=${UPI_ID}&pn=NaShe+Jewels&am=${grandTotal}&cu=INR&tn=NaShe+Jewels+Order`
+            return (
+              <div className="space-y-4">
+                {/* Header card */}
+                <div className="rounded-2xl overflow-hidden shadow-sm">
+                  <div className="bg-[#C9956C] px-6 py-5 text-center">
+                    <Smartphone size={28} className="text-white mx-auto mb-2" />
+                    <h2 className="text-white font-bold text-lg">Pay via UPI</h2>
+                    <p className="text-white/80 text-sm">Scan QR or use UPI ID below</p>
+                  </div>
 
-                {/* QR Code — flip card, hidden by default, tap to reveal */}
-                <div className="flex flex-col sm:flex-row gap-6 items-center mb-5">
-                  {(() => {
-                    const selectedAddr = addresses.find(a => a.id === selectedId)
-                    const shipping = getShippingCost(selectedAddr)
-                    const grandTotal = total + shipping
-                    return (
-                      <div
-                        className="flex-shrink-0 cursor-pointer"
-                        style={{ perspective: "600px" }}
-                        onClick={() => setQrRevealed(r => !r)}
-                      >
-                        <div style={{
-                          width: "176px", height: "176px",
-                          transition: "transform 0.6s",
-                          transformStyle: "preserve-3d",
-                          transform: qrRevealed ? "rotateY(180deg)" : "rotateY(0deg)",
-                          position: "relative"
-                        }}>
-                          {/* Front — blurred placeholder */}
-                          <div style={{ backfaceVisibility: "hidden", WebkitBackfaceVisibility: "hidden" }}
-                            className="absolute inset-0 bg-[#F2EDE6] border-2 border-[#1B2B5E]/20 rounded-xl flex flex-col items-center justify-center gap-2">
-                            <div className="w-16 h-16 grid grid-cols-3 gap-1 opacity-30">
-                              {Array(9).fill(0).map((_, i) => <div key={i} className="bg-white rounded-sm" />)}
-                            </div>
-                            <p className="text-[#1B2B5E] text-xs font-semibold">Tap to reveal QR</p>
-                            <p className="text-[#4A4A6A] text-xs">₹{Math.ceil(grandTotal).toLocaleString("en-IN")}</p>
-                          </div>
-                          {/* Back — actual QR */}
-                          <div style={{ backfaceVisibility: "hidden", WebkitBackfaceVisibility: "hidden", transform: "rotateY(180deg)" }}
-                            className="absolute inset-0 bg-white p-2 rounded-xl flex flex-col items-center justify-center">
-                            <img src={getQRUrl(UPI_ID, grandTotal)} alt="UPI QR Code" className="w-40 h-40 object-contain" />
-                            <p className="text-gray-500 text-xs mt-1">₹{Math.ceil(grandTotal).toLocaleString("en-IN")}</p>
-                          </div>
-                        </div>
-                        <p className="text-center text-xs text-gray-500 mt-2">{qrRevealed ? "Tap to hide" : "Tap to show QR"}</p>
+                  <div className="bg-white px-6 py-6 space-y-5">
+                    {/* Amount */}
+                    <div className="text-center">
+                      <p className="text-[#8A8AAA] text-xs mb-1">Amount to Pay</p>
+                      <p className="text-[#1A1A2E] text-4xl font-bold" style={{ fontFamily: "Georgia, serif" }}>
+                        ₹{grandTotal.toLocaleString("en-IN")}
+                      </p>
+                    </div>
+
+                    {/* QR Code */}
+                    <div className="flex flex-col items-center gap-2">
+                      <div className="bg-white p-3 rounded-2xl border-2 border-[#E8E0D5] shadow-sm inline-block">
+                        <img src={getQRUrl(UPI_ID, grandTotal)} alt="UPI QR Code" className="w-48 h-48 object-contain" />
                       </div>
-                    )
-                  })()}
-                  <div className="flex-1 space-y-3">
-                    <div className="bg-[#FAF8F5] border border-[#E8E0D5] rounded-xl p-4">
-                      <p className="text-[#4A4A6A] text-xs mb-1">UPI ID</p>
-                      <div className="flex items-center gap-2">
-                        <p className="text-[#1A1A2E] font-mono text-sm font-semibold">{UPI_ID}</p>
-                        <button onClick={() => { navigator.clipboard.writeText(UPI_ID); toast.success("UPI ID copied!") }}
-                          className="text-[#C9956C] hover:text-[#1B2B5E] transition-colors">
-                          <Copy size={14} />
-                        </button>
+                      <p className="text-[#8A8AAA] text-xs">Scan with any UPI app</p>
+                      {/* App logos */}
+                      <div className="flex items-center gap-4 mt-1">
+                        {["GPay","PhonePe","Paytm","BHIM"].map(app => (
+                          <span key={app} className="text-xs font-semibold text-[#4A4A6A] bg-[#FAF8F5] border border-[#E8E0D5] px-2.5 py-1 rounded-lg">{app}</span>
+                        ))}
                       </div>
                     </div>
-                    <div className="bg-[#1B2B5E]/5 border border-[#1B2B5E]/20 rounded-xl p-3">
-                      <p className="text-[#1B2B5E] text-xs font-semibold mb-1">Amount to Pay</p>
-                      {(() => {
-                        const selectedAddr = addresses.find(a => a.id === selectedId)
-                        const shipping = getShippingCost(selectedAddr)
-                        return <p className="text-[#1A1A2E] text-2xl font-bold">₹{Math.ceil(total + shipping).toLocaleString("en-IN")}</p>
-                      })()}
+
+                    {/* Divider */}
+                    <div className="flex items-center gap-3">
+                      <div className="flex-1 h-px bg-[#E8E0D5]" />
+                      <span className="text-[#8A8AAA] text-xs">Or pay using UPI ID</span>
+                      <div className="flex-1 h-px bg-[#E8E0D5]" />
                     </div>
-                    <div className="text-xs text-[#4A4A6A] space-y-1">
-                      <p>1. Open PhonePe / GPay / Paytm</p>
-                      <p>2. Scan QR or enter UPI ID</p>
-                      <p>3. Pay exact amount shown above</p>
-                      <p>4. Upload screenshot below</p>
+
+                    {/* UPI ID row */}
+                    <div className="flex items-center gap-2 bg-[#FAF8F5] border border-[#E8E0D5] rounded-xl px-4 py-3">
+                      <p className="flex-1 text-[#1A1A2E] font-mono text-sm font-semibold">{UPI_ID}</p>
+                      <button
+                        onClick={() => { navigator.clipboard.writeText(UPI_ID); toast.success("UPI ID copied!") }}
+                        className="flex items-center gap-1.5 px-3 py-1.5 bg-[#C9956C] text-white text-xs font-semibold rounded-lg hover:bg-[#b5824f] transition-all">
+                        <Copy size={12} /> Copy
+                      </button>
+                    </div>
+
+                    {/* Open UPI App button */}
+                    <a href={upiDeepLink}
+                      className="flex items-center justify-center gap-2 w-full py-3 bg-green-500 hover:bg-green-600 text-white font-semibold rounded-xl transition-all text-sm">
+                      <Zap size={15} /> Open UPI App (amount auto-filled)
+                    </a>
+                    <p className="text-[#8A8AAA] text-xs text-center -mt-2">
+                      Tap above to open your UPI app with ₹{grandTotal.toLocaleString("en-IN")} pre-filled. If copying the UPI ID manually, enter the amount <strong>₹{grandTotal.toLocaleString("en-IN")}</strong> yourself.
+                    </p>
+
+                    {/* How to pay */}
+                    <div className="bg-[#EEF2FF] border border-[#C7D2FE] rounded-xl p-4">
+                      <p className="text-[#3730A3] text-xs font-semibold mb-2">How to pay:</p>
+                      <ol className="text-[#4338CA] text-xs space-y-1 list-decimal list-inside">
+                        <li>Scan the QR code or tap "Open UPI App" above</li>
+                        <li>Amount ₹{grandTotal.toLocaleString("en-IN")} will be auto-filled — confirm and pay</li>
+                        <li>If entering UPI ID manually, type the amount ₹{grandTotal.toLocaleString("en-IN")} yourself</li>
+                        <li>Take a screenshot of the success screen</li>
+                        <li>Upload it below to confirm your order</li>
+                      </ol>
                     </div>
                   </div>
                 </div>
 
-                {/* Other payment modes coming soon */}
-                <div className="border border-[#D4AF37]/10 rounded-xl p-3 mb-4">
-                  <p className="text-gray-500 text-xs text-center">💳 Card / Net Banking / EMI — <span className="text-[#D4AF37]">Coming Soon</span></p>
-                </div>
+                {/* Screenshot upload card */}
+                <div className="bg-white border border-[#E8E0D5] rounded-2xl p-5 shadow-sm space-y-4">
+                  <h3 className="text-[#1A1A2E] font-semibold text-sm flex items-center gap-2">
+                    <Upload size={15} className="text-[#C9956C]" /> Upload Payment Screenshot <span className="text-red-400">*</span>
+                  </h3>
 
-                {/* Screenshot upload */}
-                <div className="space-y-3">
+                  {/* What screenshot must show */}
+                  <div className="bg-orange-50 border border-orange-200 rounded-xl p-4 space-y-1.5">
+                    <p className="text-orange-700 text-xs font-semibold flex items-center gap-1.5">
+                      <AlertCircle size={12} /> Screenshot must clearly show:
+                    </p>
+                    {[
+                      { icon: "✅", text: "Payment Success message" },
+                      { icon: "✅", text: `Amount: ₹${grandTotal.toLocaleString("en-IN")}` },
+                      { icon: "✅", text: `Paid to: ${UPI_ID}` },
+                      { icon: "✅", text: "Transaction ID / UTR number" },
+                    ].map((item, i) => (
+                      <p key={i} className="text-orange-600 text-xs flex items-center gap-1.5">
+                        <span>{item.icon}</span> {item.text}
+                      </p>
+                    ))}
+                    <p className="text-orange-500 text-xs font-medium flex items-center gap-1 mt-1">
+                      <AlertCircle size={11} /> Wrong or unclear screenshots will be rejected and order cancelled.
+                    </p>
+                  </div>
+
+                  {/* UPI Transaction Reference */}
                   <div>
                     <label className="text-xs text-[#4A4A6A] mb-1 block font-medium">UPI Transaction Reference (optional)</label>
-                    <input value={upiRef} onChange={e=>setUpiRef(e.target.value)} placeholder="e.g. 123456789012"
+                    <input value={upiRef} onChange={e => setUpiRef(e.target.value)} placeholder="e.g. 123456789012"
                       className="w-full bg-white border border-[#E8E0D5] rounded-lg px-3 py-2.5 text-sm text-[#1A1A2E] placeholder-[#8A8AAA] focus:outline-none focus:border-[#1B2B5E]" />
                   </div>
-                  <div>
-                    <label className="text-xs text-[#4A4A6A] mb-1 block font-medium">Payment Screenshot *</label>
-                    <label className="flex items-center gap-3 p-4 border-2 border-dashed border-[#E8E0D5] hover:border-[#1B2B5E]/40 rounded-xl cursor-pointer transition-all bg-[#FAF8F5]">
-                      <input ref={fileRef} type="file" accept="image/*" className="hidden" onChange={handleScreenshotChange} />
-                      <Upload size={20} className="text-[#C9956C] flex-shrink-0" />
-                      <div>
-                        <p className="text-[#1A1A2E] text-sm font-medium">{screenshot ? screenshot.name : "Upload payment screenshot"}</p>
-                        <p className="text-[#8A8AAA] text-xs">JPG, PNG &mdash; max 10MB</p>
-                      </div>
-                    </label>
-                    {screenshotPreview && (
-                      <div className="mt-2 relative inline-block">
-                        <img src={screenshotPreview} alt="Screenshot preview" className="h-32 rounded-lg border border-[#D4AF37]/20 object-cover" />
-                        <button onClick={() => { setScreenshot(null); setScreenshotPreview(null) }}
-                          className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs">×</button>
-                      </div>
-                    )}
-                  </div>
-                  <div className="flex items-start gap-2 bg-yellow-500/10 border border-yellow-500/20 rounded-lg p-3">
-                    <AlertCircle size={14} className="text-yellow-400 mt-0.5 flex-shrink-0" />
-                    <p className="text-yellow-400 text-xs">Order will be confirmed only after admin verifies your payment screenshot.</p>
-                  </div>
-                </div>
-              </div>
 
-              <div className="flex gap-3">
-                <button onClick={() => setStep("address")} className="px-4 py-3 border border-[#E8E0D5] text-[#4A4A6A] rounded-lg text-sm hover:border-[#1B2B5E]/30 transition-all">&larr; Back</button>
-                <button onClick={handleSubmitOrder} disabled={submitting || !screenshot}
-                  className="flex-1 py-3 bg-[#1B2B5E] text-white font-semibold rounded-lg hover:bg-[#2A3F7E] transition-all disabled:opacity-50 flex items-center justify-center gap-2">
-                  {submitting && <Loader2 size={16} className="animate-spin" />}
-                  Place Order &amp; Confirm
+                  {/* File upload area */}
+                  <label className="flex flex-col items-center justify-center gap-2 p-6 border-2 border-dashed border-[#E8E0D5] hover:border-[#C9956C]/50 rounded-xl cursor-pointer transition-all bg-[#FAF8F5]">
+                    <input ref={fileRef} type="file" accept="image/*" className="hidden" onChange={handleScreenshotChange} />
+                    {screenshotPreview ? (
+                      <div className="relative">
+                        <img src={screenshotPreview} alt="Screenshot preview" className="h-36 rounded-lg border border-[#E8E0D5] object-cover" />
+                        <button type="button" onClick={e => { e.preventDefault(); setScreenshot(null); setScreenshotPreview(null) }}
+                          className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs shadow">×</button>
+                      </div>
+                    ) : (
+                      <>
+                        <div className="w-12 h-12 rounded-xl bg-[#F2EDE6] flex items-center justify-center">
+                          <Upload size={20} className="text-[#C9956C]" />
+                        </div>
+                        <p className="text-[#4A4A6A] text-sm font-medium">Click to upload payment screenshot</p>
+                        <p className="text-[#8A8AAA] text-xs">PNG, JPG — max 10MB</p>
+                      </>
+                    )}
+                  </label>
+                </div>
+
+                {/* CTA */}
+                <div className="space-y-2">
+                  <button onClick={handleSubmitOrder} disabled={submitting || !screenshot}
+                    className="w-full py-4 bg-[#1B2B5E] text-white font-bold rounded-xl hover:bg-[#2A3F7E] transition-all disabled:opacity-40 flex items-center justify-center gap-2 text-base shadow-lg">
+                    {submitting
+                      ? <><Loader2 size={18} className="animate-spin" /> Placing Order...</>
+                      : <><CheckCircle size={18} /> I've Paid — Confirm Order</>
+                    }
+                  </button>
+                  <p className="text-[#8A8AAA] text-xs text-center">Your order will be confirmed after admin verifies the payment</p>
+                </div>
+
+                <button onClick={() => setStep("address")} className="flex items-center gap-1 text-xs text-[#8A8AAA] hover:text-[#1B2B5E] transition-colors">
+                  &larr; Back to checkout
                 </button>
               </div>
-            </div>
-          )}
+            )
+          })()}
         </div>
 
         {/* Order Summary */}
