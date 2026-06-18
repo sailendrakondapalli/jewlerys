@@ -104,7 +104,7 @@ export default function HomePage() {
       </Helmet>
 
       {/* HERO */}
-      <section className="relative overflow-hidden" style={{ minHeight: "clamp(280px, 55vw, 600px)" }}>
+      <section className="relative overflow-hidden" style={{ minHeight: "clamp(320px, 60vw, 650px)" }}>
         {/* Full bleed background — video if set, else fallback image */}
         {heroVideoUrl ? (
           <video
@@ -113,26 +113,26 @@ export default function HomePage() {
             muted
             loop
             playsInline
-            className="absolute inset-0 w-full h-full object-cover object-center"
+            style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover", objectPosition: "center" }}
           />
         ) : (
           <img src={heroBgImg} alt="NaShe Jewels hero" className="absolute inset-0 w-full h-full object-cover object-center" />
         )}
         {/* Gradient overlay */}
-        <div className="absolute inset-0 bg-gradient-to-r from-[#FAF8F5]/90 via-[#FAF8F5]/50 to-transparent" />
+        <div className="absolute inset-0 bg-gradient-to-r from-black/60 via-black/30 to-transparent" />
 
         {/* Text content — left side, over the empty cream area of the photo */}
         <div className="relative h-full max-w-7xl mx-auto px-4 sm:px-8 flex items-center" style={{ minHeight: "inherit" }}>
           <div className="max-w-xs sm:max-w-md py-10 sm:py-16">
             <motion.h1 initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }}
-              className="text-2xl sm:text-4xl lg:text-5xl font-bold text-[#1A1A2E] mb-3 sm:mb-5 leading-tight" style={{ fontFamily: "Georgia, serif" }}>
+              className="text-2xl sm:text-4xl lg:text-5xl font-bold text-white mb-3 sm:mb-5 leading-tight" style={{ fontFamily: "Georgia, serif" }}>
               NaShe Jewels
             </motion.h1>
             <motion.p initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.4 }}
               className="text-base sm:text-xl font-semibold mb-4 sm:mb-7 leading-relaxed"
               style={{ fontFamily: "Georgia, serif" }}>
-              <span className="text-[#C9956C]">Because Luxury</span>{" "}
-              <span className="text-[#1A1A2E]">Shouldn't Be Rare.</span>
+              <span className="text-[#D4AF37]">Because Luxury</span>{" "}
+              <span className="text-white">Shouldn't Be Rare.</span>
             </motion.p>
             <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.55 }}>
               <Link to="/#categories" className="inline-flex items-center gap-1.5 px-5 sm:px-7 py-2.5 sm:py-3 bg-[#1B2B5E] text-white font-semibold rounded-lg hover:bg-[#2A3F7E] transition-all shadow-md text-xs sm:text-sm whitespace-nowrap"
