@@ -3,20 +3,12 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { X, Tag } from 'lucide-react'
 import { getSetting } from '../services/settingsService'
 
-// Default offers shown when no DB offers are set
-const DEFAULT_OFFERS = [
-  { id: 1, text: '🎉 Free Shipping on all orders across India!', link: '/products' },
-  { id: 2, text: '💍 New Bridal Collection — Shop Now', link: '/products?tags=bridal' },
-  { id: 3, text: '✨ Use code NASHE10 for 10% off on first order', link: '/products' },
-]
-
 export default function OfferBanner() {
-  const [offers, setOffers] = useState(DEFAULT_OFFERS)
+  const [offers, setOffers] = useState([])
   const [visible, setVisible] = useState(true)
   const [current, setCurrent] = useState(0)
 
   useEffect(() => {
-    // Load custom offers from DB if set
     getSetting('offer_banner').then(val => {
       if (val) {
         try {
@@ -34,13 +26,12 @@ export default function OfferBanner() {
     return () => clearInterval(t)
   }, [visible, offers.length])
 
-  if (!visible) return null
+  if (!visible || offers.length === 0) return null
 
   const offer = offers[current]
 
   return (
-    <div className="relative bg-gradient-to-r from-[#B8960C] via-[#D4AF37] to-[#B8960C] text-black overflow-hidden">
-      {/* Scrolling dots indicator */}
+    <div className="sticky top-16 z-40 relative bg-gradient-to-r from-[#B8960C] via-[#D4AF37] to-[#B8960C] text-black overflow-hidden">
       <div className="flex items-center justify-center gap-1 py-2.5 px-10">
         <Tag size={13} className="flex-shrink-0 mr-1" />
         <AnimatePresence mode="wait">
@@ -58,7 +49,6 @@ export default function OfferBanner() {
         </AnimatePresence>
       </div>
 
-      {/* Dot indicators */}
       {offers.length > 1 && (
         <div className="absolute bottom-1 left-1/2 -translate-x-1/2 flex gap-1">
           {offers.map((_, i) => (
@@ -71,7 +61,6 @@ export default function OfferBanner() {
         </div>
       )}
 
-      {/* Close button */}
       <button
         onClick={() => setVisible(false)}
         className="absolute right-2 top-1/2 -translate-y-1/2 text-black/60 hover:text-black transition-colors p-1"
