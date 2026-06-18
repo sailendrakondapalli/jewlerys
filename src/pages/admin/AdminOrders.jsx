@@ -296,12 +296,22 @@ export default function AdminOrders() {
     toast.success("Orders refreshed")
   }
 
-  // Count per tab
+  const q = search.toLowerCase().trim()
+
+  // Search-filtered orders (ignoring tab) — used for tab counts
+  const searchFiltered = localOrders.filter(o => {
+    if (!q) return true
+    const id = (o.display_order_id || "").toLowerCase()
+    const addr = (() => { try { return typeof o.address === "object" ? o.address : JSON.parse(o.address) } catch { return {} } })()
+    return id.includes(q) || String(o.id).toLowerCase().includes(q) || (addr.full_name||"").toLowerCase().includes(q) || (addr.phone||"").toLowerCase().includes(q)
+  })
+
+  // Count per tab — based on search results only
   const countFor = (tabKey) => {
-    if (tabKey === "all") return localOrders.length
-    if (tabKey === "pending") return localOrders.filter(o => o.payment_status === "pending_verification").length
-    if (tabKey === "cancelled") return localOrders.filter(o => o.order_status === "cancelled" || o.payment_status === "failed").length
-    return localOrders.filter(o => o.order_status === tabKey && o.payment_status !== "pending_verification" && o.payment_status !== "failed").length
+    if (tabKey === "all") return searchFiltered.length
+    if (tabKey === "pending") return searchFiltered.filter(o => o.payment_status === "pending_verification").length
+    if (tabKey === "cancelled") return searchFiltered.filter(o => o.order_status === "cancelled" || o.payment_status === "failed").length
+    return searchFiltered.filter(o => o.order_status === tabKey && o.payment_status !== "pending_verification" && o.payment_status !== "failed").length
   }
 
   // Filter logic
@@ -312,15 +322,7 @@ export default function AdminOrders() {
     return order.order_status === activeTab && order.payment_status !== "pending_verification"
   }
 
-  const q = search.toLowerCase().trim()
-  const filtered = localOrders.filter(o => {
-    const matchesTab = applyTabFilter(o)
-    if (!matchesTab) return false
-    if (!q) return true
-    const id = (o.display_order_id || "").toLowerCase()
-    const addr = (() => { try { return typeof o.address === "object" ? o.address : JSON.parse(o.address) } catch { return {} } })()
-    return id.includes(q) || String(o.id).toLowerCase().includes(q) || (addr.full_name||"").toLowerCase().includes(q) || (addr.phone||"").toLowerCase().includes(q)
-  })
+  const filtered = searchFiltered.filter(o => applyTabFilter(o))
 
   const totalPages = pageSize === 9999 ? 1 : Math.ceil(filtered.length / pageSize)
   const paged = pageSize === 9999 ? filtered : filtered.slice((page - 1) * pageSize, page * pageSize)
