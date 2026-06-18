@@ -133,8 +133,8 @@ export default function ProductsPage() {
           </div>
         </div>
 
-        {/* Per-page selector — only shown when a filter is active */}
-        {!loading && products.length > 0 && (category || search) && (
+        {/* Per-page selector */}
+        {!loading && products.length > 0 && (
           <div className="flex items-center justify-between mb-4">
             <p className="text-[#8A8AAA] text-xs">
               Showing {(page - 1) * pageSize + 1}–{Math.min(page * pageSize, products.length)} of {products.length} pieces
@@ -166,51 +166,7 @@ export default function ProductsPage() {
               Clear Filters
             </button>
           </div>
-        ) : !category && !search ? (
-          /* ── Grouped by category (no active filter) ── */
-          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-12">
-            {categories
-              .filter(cat => products.some(p => p.category === cat))
-              .map(cat => {
-                const catProducts = products.filter(p => p.category === cat)
-                return (
-                  <div key={cat}>
-                    {/* Section heading */}
-                    <div className="flex items-center justify-between mb-5">
-                      <div className="flex items-center gap-3">
-                        <h2 className="text-xl font-bold text-[#1A1A2E]" style={{ fontFamily: 'Georgia, serif' }}>
-                          {cat}
-                        </h2>
-                        <span className="text-xs text-[#8A8AAA] bg-[#F5F0EA] px-2.5 py-1 rounded-full">
-                          {catProducts.length} {catProducts.length === 1 ? 'piece' : 'pieces'}
-                        </span>
-                      </div>
-                      <button
-                        onClick={() => setFilter('category', cat)}
-                        className="text-xs text-[#C9956C] hover:text-[#b5824f] font-medium transition-colors flex items-center gap-1"
-                      >
-                        View all <ChevronRight size={13} />
-                      </button>
-                    </div>
-                    <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
-                      {catProducts.map((p, i) => (
-                        <motion.div
-                          key={p.id}
-                          initial={{ opacity: 0, y: 20 }}
-                          animate={{ opacity: 1, y: 0 }}
-                          transition={{ delay: i * 0.03 }}
-                        >
-                          <ProductCard product={p} />
-                        </motion.div>
-                      ))}
-                    </div>
-                    <div className="mt-4 border-b border-[#F0EBE3]" />
-                  </div>
-                )
-              })}
-          </motion.div>
         ) : (
-          /* ── Filtered / search results with pagination ── */
           <>
             <motion.div
               initial={{ opacity: 0 }}
