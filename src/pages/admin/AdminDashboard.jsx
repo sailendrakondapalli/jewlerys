@@ -344,7 +344,9 @@ export default function AdminDashboard() {
                             <td className="px-4 py-2.5">
                               <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${
                                 o.payment_status === "paid"
-                                  ? o.order_status === "delivered" ? "bg-green-500 text-white" : "bg-green-500/20 text-green-600"
+                                  ? o.order_status === "delivered" ? "bg-green-500 text-white"
+                                  : o.order_status === "shipping" ? "bg-orange-500 text-white"
+                                  : "bg-blue-500 text-white"
                                   : o.payment_status === "pending_verification" ? "bg-orange-500/20 text-orange-500"
                                   : o.payment_status === "failed" ? "bg-red-500/20 text-red-500"
                                   : "bg-yellow-500/20 text-yellow-600"
