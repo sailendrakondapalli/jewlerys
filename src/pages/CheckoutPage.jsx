@@ -319,17 +319,17 @@ export default function CheckoutPage() {
               <div className="space-y-4">
                 {/* Header card */}
                 <div className="rounded-2xl overflow-hidden shadow-sm">
-                  <div className="bg-[#C9956C] px-6 py-5 text-center">
-                    <Smartphone size={28} className="text-white mx-auto mb-2" />
-                    <h2 className="text-white font-bold text-lg">Pay via UPI</h2>
-                    <p className="text-white/80 text-sm">Scan QR or use UPI ID below</p>
+                  <div className="bg-[#1B2B5E] px-6 py-5 text-center">
+                    <Smartphone size={28} className="text-[#D4AF37] mx-auto mb-2" />
+                    <h2 className="text-white font-bold text-xl">Pay via UPI</h2>
+                    <p className="text-blue-200 text-sm">Scan QR or use UPI ID below</p>
                   </div>
 
                   <div className="bg-white px-6 py-6 space-y-5">
                     {/* Amount */}
                     <div className="text-center">
-                      <p className="text-[#8A8AAA] text-xs mb-1">Amount to Pay</p>
-                      <p className="text-[#1A1A2E] text-4xl font-bold" style={{ fontFamily: "Georgia, serif" }}>
+                      <p className="text-[#4A4A6A] text-sm font-medium mb-1">Amount to Pay</p>
+                      <p className="text-[#1B2B5E] text-5xl font-bold" style={{ fontFamily: "Georgia, serif" }}>
                         ₹{grandTotal.toLocaleString("en-IN")}
                       </p>
                     </div>
@@ -339,28 +339,28 @@ export default function CheckoutPage() {
                       <div className="bg-white p-3 rounded-2xl border-2 border-[#E8E0D5] shadow-sm inline-block">
                         <img src={getQRUrl(UPI_ID, grandTotal)} alt="UPI QR Code" className="w-48 h-48 object-contain" />
                       </div>
-                      <p className="text-[#8A8AAA] text-xs">Scan with any UPI app</p>
+                      <p className="text-[#4A4A6A] text-sm font-medium">Scan with any UPI app</p>
                       {/* App logos */}
-                      <div className="flex items-center gap-4 mt-1">
+                      <div className="flex items-center gap-3 mt-1">
                         {["GPay","PhonePe","Paytm","BHIM"].map(app => (
-                          <span key={app} className="text-xs font-semibold text-[#4A4A6A] bg-[#FAF8F5] border border-[#E8E0D5] px-2.5 py-1 rounded-lg">{app}</span>
+                          <span key={app} className="text-xs font-bold text-[#1B2B5E] bg-[#EEF2FF] border border-[#C7D2FE] px-3 py-1.5 rounded-lg">{app}</span>
                         ))}
                       </div>
                     </div>
 
                     {/* Divider */}
                     <div className="flex items-center gap-3">
-                      <div className="flex-1 h-px bg-[#E8E0D5]" />
-                      <span className="text-[#8A8AAA] text-xs">Or pay using UPI ID</span>
-                      <div className="flex-1 h-px bg-[#E8E0D5]" />
+                      <div className="flex-1 h-px bg-[#C7D2FE]" />
+                      <span className="text-[#4A4A6A] text-xs font-medium">Or pay using UPI ID</span>
+                      <div className="flex-1 h-px bg-[#C7D2FE]" />
                     </div>
 
                     {/* UPI ID row */}
-                    <div className="flex items-center gap-2 bg-[#FAF8F5] border border-[#E8E0D5] rounded-xl px-4 py-3">
-                      <p className="flex-1 text-[#1A1A2E] font-mono text-sm font-semibold">{UPI_ID}</p>
+                    <div className="flex items-center gap-2 bg-[#EEF2FF] border border-[#C7D2FE] rounded-xl px-4 py-3">
+                      <p className="flex-1 text-[#1B2B5E] font-mono text-sm font-bold">{UPI_ID}</p>
                       <button
                         onClick={() => { navigator.clipboard.writeText(UPI_ID); toast.success("UPI ID copied!") }}
-                        className="flex items-center gap-1.5 px-3 py-1.5 bg-[#C9956C] text-white text-xs font-semibold rounded-lg hover:bg-[#b5824f] transition-all">
+                        className="flex items-center gap-1.5 px-4 py-2 bg-[#C9956C] text-white text-xs font-bold rounded-lg hover:bg-[#b5824f] transition-all shadow-sm">
                         <Copy size={12} /> Copy
                       </button>
                     </div>
@@ -375,9 +375,9 @@ export default function CheckoutPage() {
                     </p>
 
                     {/* How to pay */}
-                    <div className="bg-[#EEF2FF] border border-[#C7D2FE] rounded-xl p-4">
-                      <p className="text-[#3730A3] text-xs font-semibold mb-2">How to pay:</p>
-                      <ol className="text-[#4338CA] text-xs space-y-1 list-decimal list-inside">
+                    <div className="bg-[#EFF6FF] border border-[#93C5FD] rounded-xl p-4">
+                      <p className="text-[#1D4ED8] text-sm font-bold mb-2">How to pay:</p>
+                      <ol className="text-[#1E40AF] text-sm space-y-1.5 list-decimal list-inside">
                         <li>Scan the QR code or tap "Open UPI App" above</li>
                         <li>Amount ₹{grandTotal.toLocaleString("en-IN")} will be auto-filled — confirm and pay</li>
                         <li>If entering UPI ID manually, type the amount ₹{grandTotal.toLocaleString("en-IN")} yourself</li>
@@ -395,9 +395,9 @@ export default function CheckoutPage() {
                   </h3>
 
                   {/* What screenshot must show */}
-                  <div className="bg-orange-50 border border-orange-200 rounded-xl p-4 space-y-1.5">
-                    <p className="text-orange-700 text-xs font-semibold flex items-center gap-1.5">
-                      <AlertCircle size={12} /> Screenshot must clearly show:
+                  <div className="bg-red-50 border border-red-300 rounded-xl p-4 space-y-1.5">
+                    <p className="text-red-700 text-sm font-bold flex items-center gap-1.5">
+                      <AlertCircle size={14} /> Screenshot must clearly show:
                     </p>
                     {[
                       { icon: "✅", text: "Payment Success message" },
@@ -405,12 +405,12 @@ export default function CheckoutPage() {
                       { icon: "✅", text: `Paid to: ${UPI_ID}` },
                       { icon: "✅", text: "Transaction ID / UTR number" },
                     ].map((item, i) => (
-                      <p key={i} className="text-orange-600 text-xs flex items-center gap-1.5">
+                      <p key={i} className="text-red-700 text-sm flex items-center gap-1.5">
                         <span>{item.icon}</span> {item.text}
                       </p>
                     ))}
-                    <p className="text-orange-500 text-xs font-medium flex items-center gap-1 mt-1">
-                      <AlertCircle size={11} /> Wrong or unclear screenshots will be rejected and order cancelled.
+                    <p className="text-red-600 text-sm font-semibold flex items-center gap-1 mt-2 pt-2 border-t border-red-200">
+                      <AlertCircle size={12} /> Wrong or unclear screenshots will be rejected and order cancelled.
                     </p>
                   </div>
 
@@ -445,13 +445,13 @@ export default function CheckoutPage() {
                 {/* CTA */}
                 <div className="space-y-2">
                   <button onClick={handleSubmitOrder} disabled={submitting || !screenshot}
-                    className="w-full py-4 bg-[#1B2B5E] text-white font-bold rounded-xl hover:bg-[#2A3F7E] transition-all disabled:opacity-40 flex items-center justify-center gap-2 text-base shadow-lg">
+                    className="w-full py-4 bg-[#1B2B5E] text-white font-bold rounded-xl hover:bg-[#2A3F7E] transition-all disabled:opacity-40 disabled:cursor-not-allowed flex items-center justify-center gap-2 text-base shadow-lg">
                     {submitting
                       ? <><Loader2 size={18} className="animate-spin" /> Placing Order...</>
                       : <><CheckCircle size={18} /> I've Paid — Confirm Order</>
                     }
                   </button>
-                  <p className="text-[#8A8AAA] text-xs text-center">Your order will be confirmed after admin verifies the payment</p>
+                  <p className="text-[#4A4A6A] text-xs text-center font-medium">Your order will be confirmed after admin verifies the payment</p>
                 </div>
 
                 <button onClick={() => setStep("address")} className="flex items-center gap-1 text-xs text-[#8A8AAA] hover:text-[#1B2B5E] transition-colors">
