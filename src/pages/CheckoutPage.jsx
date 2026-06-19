@@ -409,7 +409,7 @@ export default function CheckoutPage() {
                       <p className="flex-1 text-[#1B2B5E] font-mono text-sm font-bold">{UPI_ID}</p>
                       <button
                         onClick={() => { navigator.clipboard.writeText(UPI_ID); toast.success("UPI ID copied!") }}
-                        className="flex items-center gap-1.5 px-4 py-2 bg-[#C9956C] text-white text-xs font-bold rounded-lg hover:bg-[#b5824f] transition-all shadow-sm">
+                        className="flex items-center gap-1.5 px-4 py-2 bg-[#1B2B5E] text-white text-xs font-bold rounded-lg hover:bg-[#2A3F7E] transition-all shadow-sm">
                         <Copy size={12} /> Copy
                       </button>
                     </div>
@@ -611,7 +611,7 @@ export default function CheckoutPage() {
                   placeholder="Enter promo code"
                   className="flex-1 bg-white border border-[#E8E0D5] rounded-lg px-3 py-2 text-sm text-[#1A1A2E] placeholder-[#8A8AAA] focus:outline-none focus:border-[#C9956C]" />
                 <button onClick={() => applyPromo()} disabled={promoLoading || !promoInput.trim()}
-                  className="px-3 py-2 bg-[#C9956C] text-white text-sm font-semibold rounded-lg hover:bg-[#b5824f] disabled:opacity-50 flex items-center gap-1">
+                  className="px-3 py-2 bg-[#1B2B5E] text-white text-sm font-semibold rounded-lg hover:bg-[#2A3F7E] disabled:opacity-50 flex items-center gap-1">
                   {promoLoading ? <Loader2 size={13} className="animate-spin" /> : "Apply"}
                 </button>
               </div>
