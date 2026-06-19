@@ -654,16 +654,23 @@ export default function CheckoutPage() {
                               {eligible && discount > 0 && <p className="text-green-600 text-xs font-semibold">Save {formatINR(discount)}</p>}
                             </div>
                           </div>
-                          {eligible && !appliedPromo ? (
-                            <button
-                              onClick={() => { setPromoInput(code.code); applyPromo(code.code) }}
-                              disabled={promoLoading}
-                              className="flex-shrink-0 px-3 py-1 bg-[#C9956C] text-white text-xs font-bold rounded-lg hover:bg-[#b5824f] transition-all disabled:opacity-50">
-                              Apply
-                            </button>
-                          ) : (
-                            <Lock size={12} className="text-gray-300 flex-shrink-0" />
-                          )}
+                         {eligible && !appliedPromo ? (
+  <button
+    onClick={() => {
+      setPromoInput(code.code)
+      applyPromo(code.code)
+    }}
+    disabled={promoLoading}
+    className="flex-shrink-0 px-4 py-2 bg-[#1B2B5E] text-white text-sm font-semibold rounded-lg hover:bg-[#2A3F7E] transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+  >
+    Apply
+  </button>
+) : (
+  <Lock
+    size={12}
+    className="text-gray-300 flex-shrink-0"
+  />
+)}
                         </div>
                       </div>
                     )
