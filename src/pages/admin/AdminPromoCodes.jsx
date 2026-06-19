@@ -95,7 +95,7 @@ export default function AdminPromoCodes() {
           <h1 className="text-3xl font-bold text-[#1B2B5E]" style={{ fontFamily: "Georgia, serif" }}>Promo Codes</h1>
           <p className="text-gray-500 text-sm mt-1">{codes.length} total codes</p>
         </div>
-        <button onClick={openAdd} className="flex items-center gap-2 px-4 py-2 bg-[#C9956C] text-white font-semibold rounded-lg hover:bg-[#b5824f] transition-all text-sm">
+        <button onClick={openAdd} className="flex items-center gap-2 px-4 py-2 bg-[#1B2B5E] text-white font-semibold rounded-lg hover:bg-[#2A3F7E] transition-all text-sm">
           <Plus size={15} /> Add Code
         </button>
       </div>
