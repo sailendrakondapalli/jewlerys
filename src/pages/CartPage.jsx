@@ -7,15 +7,45 @@ import { useWishlistStore } from '../store/wishlistStore'
 import { formatINR } from '../utils/format'
 import { isVideoUrl } from '../services/storageService'
 import toast from 'react-hot-toast'
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 
 export default function CartPage() {
   const { items, updateQuantity, removeFromCart, getTotal } = useCartStore()
   const { user } = useAuthStore()
   const { toggleWishlist } = useWishlistStore()
   const navigate = useNavigate()
-  const total = getTotal()
-  const hasOutOfStock = items.some(i => i.products?.stock === 0)
+
+  // Selected item IDs (default: all selected)
+  const [selectedIds, setSelectedIds] = useState(() => new Set())
+
+  // Whenever items change, add any new item to selection
+  useEffect(() => {
+    setSelectedIds(prev => {
+      const next = new Set(prev)
+      items.forEach(i => { const key = i.id || i.product_id; if (!next.has(key)) next.add(key) })
+      // Remove keys that no longer exist
+      ;[...next].forEach(k => { if (!items.find(i => (i.id || i.product_id) === k)) next.delete(k) })
+      return next
+    })
+  }, [items])
+
+  const toggleItem = (key) => {
+    setSelectedIds(prev => {
+      const next = new Set(prev)
+      next.has(key) ? next.delete(key) : next.add(key)
+      return next
+    })
+  }
+
+  const allSelected = items.length > 0 && selectedIds.size === items.length
+  const toggleAll = () => {
+    if (allSelected) setSelectedIds(new Set())
+    else setSelectedIds(new Set(items.map(i => i.id || i.product_id)))
+  }
+
+  const selectedItems = items.filter(i => selectedIds.has(i.id || i.product_id))
+  const selectedTotal = selectedItems.reduce((s, i) => s + (i.products?.price || 0) * i.quantity, 0)
+  const hasOutOfStock = selectedItems.some(i => i.products?.stock === 0)
 
   // Cart abandonment reminder after 3 minutes of inactivity
   useEffect(() => {
@@ -41,7 +71,7 @@ export default function CartPage() {
         ),
         { duration: 10000, id: 'cart-reminder' }
       )
-    }, 3 * 60 * 1000) // 3 minutes
+    }, 3 * 60 * 1000)
     return () => clearTimeout(timer)
   }, [items.length])
 
@@ -64,6 +94,11 @@ export default function CartPage() {
     await updateQuantity(item.id || item.product_id, newQty, user?.id)
   }
 
+  const handleCheckout = () => {
+    if (selectedItems.length === 0) { toast.error('Select at least one item to checkout'); return }
+    navigate('/checkout', { state: { selectedItems } })
+  }
+
   if (items.length === 0) {
     return (
       <div className="max-w-2xl mx-auto px-4 py-20 text-center">
@@ -79,7 +114,24 @@ export default function CartPage() {
 
   return (
     <div className="max-w-5xl mx-auto px-4 py-8">
-      <h1 className="text-3xl font-bold text-[#1A1A2E] mb-8" style={{ fontFamily: 'Georgia, serif' }}>Shopping Cart</h1>
+      <h1 className="text-3xl font-bold text-[#1A1A2E] mb-6" style={{ fontFamily: 'Georgia, serif' }}>Shopping Cart</h1>
+
+      {/* Select all row */}
+      <div className="flex items-center gap-3 mb-4 px-1">
+        <input
+          type="checkbox"
+          id="select-all"
+          checked={allSelected}
+          onChange={toggleAll}
+          className="w-4 h-4 accent-[#1B2B5E] cursor-pointer"
+        />
+        <label htmlFor="select-all" className="text-sm text-[#4A4A6A] cursor-pointer select-none">
+          {allSelected ? 'Deselect all' : `Select all (${items.length})`}
+        </label>
+        {selectedIds.size > 0 && selectedIds.size < items.length && (
+          <span className="text-xs text-[#C9956C] font-medium">{selectedIds.size} of {items.length} selected</span>
+        )}
+      </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         {/* Items */}
@@ -89,14 +141,28 @@ export default function CartPage() {
               const product = item.products || {}
               const mediaUrl = product.images?.[0]
               const fallback = 'https://images.unsplash.com/photo-1515562153-702640cf-b037-4b1e-83b0-418397cf1be3?w=200&q=80'
+              const key = item.id || item.product_id
+              const isSelected = selectedIds.has(key)
               return (
                 <motion.div
-                  key={item.id || item.product_id}
+                  key={key}
                   initial={{ opacity: 0, x: -20 }}
                   animate={{ opacity: 1, x: 0 }}
                   exit={{ opacity: 0, x: -20 }}
-                  className="flex gap-4 bg-white border border-[#E8E0D5] rounded-xl p-4 shadow-sm"
+                  className={`flex gap-4 bg-white border rounded-xl p-4 shadow-sm transition-all ${
+                    isSelected ? 'border-[#1B2B5E]' : 'border-[#E8E0D5] opacity-60'
+                  }`}
                 >
+                  {/* Checkbox */}
+                  <div className="flex items-center flex-shrink-0">
+                    <input
+                      type="checkbox"
+                      checked={isSelected}
+                      onChange={() => toggleItem(key)}
+                      className="w-4 h-4 accent-[#1B2B5E] cursor-pointer"
+                    />
+                  </div>
+
                   <Link to={`/products/${item.product_id}`} className="flex-shrink-0">
                     {mediaUrl && isVideoUrl(mediaUrl) ? (
                       <video
@@ -116,6 +182,7 @@ export default function CartPage() {
                       />
                     )}
                   </Link>
+
                   <div className="flex-1 min-w-0">
                     <Link to={`/products/${item.product_id}`}>
                       <h3 className="text-[#1A1A2E] text-sm font-semibold hover:text-[#1B2B5E] transition-colors line-clamp-2">{product.name}</h3>
@@ -153,22 +220,35 @@ export default function CartPage() {
         {/* Summary */}
         <div className="bg-white border border-[#E8E0D5] rounded-xl p-6 h-fit sticky top-20 shadow-sm">
           <h2 className="text-[#1A1A2E] font-semibold mb-4">Order Summary</h2>
-          <div className="space-y-3 mb-4">
-            {items.map(item => (
-              <div key={item.id || item.product_id} className="flex justify-between text-sm">
-                <span className="text-[#4A4A6A] truncate mr-2">{item.products?.name} × {item.quantity}</span>
-                <span className="text-[#1A1A2E] shrink-0 font-medium">{formatINR((item.products?.price || 0) * item.quantity)}</span>
-              </div>
-            ))}
-          </div>
+
+          {selectedItems.length === 0 ? (
+            <p className="text-[#8A8AAA] text-sm text-center py-4">No items selected</p>
+          ) : (
+            <div className="space-y-3 mb-4">
+              {selectedItems.map(item => (
+                <div key={item.id || item.product_id} className="flex justify-between text-sm">
+                  <span className="text-[#4A4A6A] truncate mr-2">{item.products?.name} × {item.quantity}</span>
+                  <span className="text-[#1A1A2E] shrink-0 font-medium">{formatINR((item.products?.price || 0) * item.quantity)}</span>
+                </div>
+              ))}
+            </div>
+          )}
+
           <div className="border-t border-[#E8E0D5] pt-4 mb-6">
             <div className="flex justify-between">
               <span className="text-[#1A1A2E] font-semibold">Total</span>
-              <span className="text-[#1B2B5E] font-bold text-lg">{formatINR(total)}</span>
+              <span className="text-[#1B2B5E] font-bold text-lg">{formatINR(selectedTotal)}</span>
             </div>
+            {selectedItems.length > 0 && selectedItems.length < items.length && (
+              <p className="text-[#8A8AAA] text-xs mt-1">{selectedItems.length} of {items.length} items selected</p>
+            )}
           </div>
-          <button onClick={() => navigate('/checkout')} disabled={hasOutOfStock || !user}
-            className="w-full flex items-center justify-center gap-2 py-3 bg-[#1B2B5E] text-white font-semibold rounded-lg hover:bg-[#2A3F7E] transition-all disabled:opacity-50 disabled:cursor-not-allowed">
+
+          <button
+            onClick={handleCheckout}
+            disabled={hasOutOfStock || !user || selectedItems.length === 0}
+            className="w-full flex items-center justify-center gap-2 py-3 bg-[#1B2B5E] text-white font-semibold rounded-lg hover:bg-[#2A3F7E] transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+          >
             Proceed to Checkout <ArrowRight size={16} />
           </button>
           {!user && <p className="text-[#8A8AAA] text-xs text-center mt-2">Please login to checkout</p>}

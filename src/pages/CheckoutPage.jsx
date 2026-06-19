@@ -82,7 +82,7 @@ function NewAddressForm({ onSave, onCancel, saving }) {
 }
 
 export default function CheckoutPage() {
-  const { items: cartItems, getTotal, clearCart } = useCartStore()
+  const { items: cartItems, getTotal, clearCart, removeFromCart } = useCartStore()
   const { user } = useAuthStore()
   const navigate = useNavigate()
   const location = useLocation()
@@ -91,10 +91,13 @@ export default function CheckoutPage() {
   const buyNowData = location.state?.buyNow || null
   const isBuyNow = !!buyNowData
 
+  // Selected items passed from CartPage (partial checkout)
+  const selectedFromCart = location.state?.selectedItems || null
+
   // Normalise items into the same shape as cart items so the rest of the page works identically
   const items = isBuyNow
     ? [{ id: `buynow_${buyNowData.product.id}`, product_id: buyNowData.product.id, quantity: buyNowData.quantity, products: buyNowData.product }]
-    : cartItems
+    : (selectedFromCart || cartItems)
 
   const total = items.reduce((s, i) => s + (i.products?.price || 0) * i.quantity, 0)
   const fileRef = useRef(null)
@@ -267,8 +270,17 @@ export default function CheckoutPage() {
 
       const displayOrderId = createdOrderIds.join(" + ")
 
-      // Clear cart only for normal cart checkout — Buy Now doesn't touch the cart
-      if (!isBuyNow) await clearCart(user.id)
+      // Clear only the checked-out items from cart (not unselected ones)
+      if (!isBuyNow) {
+        if (selectedFromCart) {
+          // Partial checkout — remove only the items that were checked out
+          for (const item of selectedFromCart) {
+            await removeFromCart(item.id || item.product_id, user.id)
+          }
+        } else {
+          await clearCart(user.id)
+        }
+      }
 
       // Record promo code usage so one-time codes get disabled for this user
       if (appliedPromo?.promo) {
