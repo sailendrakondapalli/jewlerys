@@ -80,6 +80,11 @@ export default function AdminPromoCodes() {
     } catch { toast.error("Failed to update") }
   }
 
+  const PAGE_SIZE = 10
+  const [page, setPage] = useState(1)
+  const totalPages = Math.ceil(codes.length / PAGE_SIZE)
+  const pagedCodes = codes.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE)
+
   const inp = "w-full bg-white border border-gray-200 rounded-lg px-3 py-2.5 text-sm text-[#1A1A2E] focus:outline-none focus:border-[#1B2B5E]"
   const lbl = "text-xs text-gray-400 mb-1 block"
 
@@ -87,7 +92,7 @@ export default function AdminPromoCodes() {
     <div className="space-y-5">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-[#1B2B5E]" style={{ fontFamily: "Georgia, serif" }}>Promo Codes</h1>
+          <h1 className="text-3xl font-bold text-[#1B2B5E]" style={{ fontFamily: "Georgia, serif" }}>Promo Codes</h1>
           <p className="text-gray-500 text-sm mt-1">{codes.length} total codes</p>
         </div>
         <button onClick={openAdd} className="flex items-center gap-2 px-4 py-2 bg-[#C9956C] text-white font-semibold rounded-lg hover:bg-[#b5824f] transition-all text-sm">
@@ -114,7 +119,7 @@ export default function AdminPromoCodes() {
             </thead>
             <tbody className="divide-y divide-gray-100">
               <AnimatePresence>
-                {codes.map(c => (
+                {pagedCodes.map(c => (
                   <motion.tr key={c.id} initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
                     className="hover:bg-gray-50/60 transition-colors">
                     <td className="px-5 py-3">
@@ -156,6 +161,27 @@ export default function AdminPromoCodes() {
           </table>
         )}
       </div>
+
+      {/* Pagination */}
+      {totalPages > 1 && (
+        <div className="flex items-center justify-between flex-wrap gap-2">
+          <p className="text-xs text-gray-500">
+            Showing {(page - 1) * PAGE_SIZE + 1}–{Math.min(page * PAGE_SIZE, codes.length)} of {codes.length}
+          </p>
+          <div className="flex items-center gap-1">
+            <button onClick={() => setPage(p => Math.max(1, p - 1))} disabled={page === 1}
+              className="px-2 py-1 text-xs rounded border border-gray-200 text-gray-500 hover:border-[#1B2B5E] disabled:opacity-40">‹</button>
+            {Array.from({ length: totalPages }, (_, i) => i + 1).map(p => (
+              <button key={p} onClick={() => setPage(p)}
+                className={`px-2.5 py-1 text-xs rounded border transition-all ${p === page ? "bg-[#1B2B5E] text-white border-[#1B2B5E]" : "border-gray-200 text-gray-500 hover:border-[#1B2B5E]"}`}>
+                {p}
+              </button>
+            ))}
+            <button onClick={() => setPage(p => Math.min(totalPages, p + 1))} disabled={page === totalPages}
+              className="px-2 py-1 text-xs rounded border border-gray-200 text-gray-500 hover:border-[#1B2B5E] disabled:opacity-40">›</button>
+          </div>
+        </div>
+      )}
 
       {/* Add/Edit Modal */}
       <AnimatePresence>
