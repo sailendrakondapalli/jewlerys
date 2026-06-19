@@ -4,7 +4,7 @@ import { Helmet } from 'react-helmet-async'
 import { motion } from 'framer-motion'
 import { ShoppingCart, Heart, Zap, ChevronLeft, ChevronRight, Star, Tag, Ticket, Copy } from 'lucide-react'
 import { fetchProductById, fetchProducts } from '../services/productService'
-import { fetchActiveCodes } from '../services/promoService'
+import { fetchActiveCodes, fetchUsedCodeIds } from '../services/promoService'
 import { useAuthStore } from '../store/authStore'
 import { useCartStore } from '../store/cartStore'
 import { useWishlistStore } from '../store/wishlistStore'
@@ -34,14 +34,19 @@ export default function ProductDetailPage() {
     Promise.all([
       fetchProductById(id),
       fetchProducts(),
-      fetchActiveCodes().catch(() => []) // graceful fallback if table doesn't exist yet
-    ]).then(([prod, all, codes]) => {
+      fetchActiveCodes().catch(() => []),
+      fetchUsedCodeIds(user?.id).catch(() => [])
+    ]).then(([prod, all, codes, usedIds]) => {
       const finalProd = prod || all.find(p => p.custom_id === id) || null
       setProduct(finalProd)
       setAllProducts(all)
       if (finalProd) addProduct(finalProd)
-      // Filter codes applicable to this product's category (or all categories)
-      setPromoCodes(codes.filter(c => !c.applicable_category || c.applicable_category === finalProd?.category))
+      // Filter: match category, and hide one-time codes already used by this user
+      setPromoCodes(codes.filter(c => {
+        if (c.applicable_category && c.applicable_category !== finalProd?.category) return false
+        if (c.is_one_time && usedIds.includes(c.id)) return false
+        return true
+      }))
       setLoading(false)
     })
   }, [id])

@@ -109,3 +109,14 @@ export async function deletePromoCode(id) {
   const { error } = await supabase.from('promo_codes').delete().eq('id', id)
   if (error) throw error
 }
+
+// Get code IDs already used by this user (for one-time codes)
+export async function fetchUsedCodeIds(userId) {
+  if (!userId) return []
+  const { data, error } = await supabase
+    .from('promo_code_uses')
+    .select('code_id')
+    .eq('user_id', userId)
+  if (error) return []
+  return (data || []).map(r => r.code_id)
+}
