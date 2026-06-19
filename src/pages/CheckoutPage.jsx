@@ -519,12 +519,31 @@ export default function CheckoutPage() {
         <div className="bg-white border border-[#E8E0D5] rounded-xl p-6 h-fit sticky top-20 shadow-sm">
           <h2 className="text-[#1A1A2E] font-semibold mb-4">Order Summary</h2>
           <div className="space-y-2 mb-4 max-h-48 overflow-y-auto">
-            {items.map(item => (
-              <div key={item.id || item.product_id} className="flex justify-between text-sm">
-                <span className="text-[#4A4A6A] truncate mr-2">{item.products?.name} &times; {item.quantity}</span>
-                <span className="text-[#1A1A2E] shrink-0 font-medium">{formatINR((item.products?.price || 0) * item.quantity)}</span>
-              </div>
-            ))}
+            {items.map(item => {
+              // Check if this specific item qualifies for the applied promo
+              const itemOriginal = (item.products?.price || 0) * item.quantity
+              const itemDiscount = appliedPromo
+                ? (() => {
+                    const p = appliedPromo.promo
+                    const qualifies = !p.applicable_category ||
+                      (item.products?.category || '').toLowerCase() === p.applicable_category.toLowerCase()
+                    if (!qualifies) return 0
+                    if (p.discount_type === 'percentage') return Math.floor((itemOriginal * p.discount_value) / 100)
+                    // flat: spread proportionally across qualifying items
+                    return 0 // handled at subtotal level for flat
+                  })()
+                : 0
+              const itemFinal = itemOriginal - itemDiscount
+              return (
+                <div key={item.id || item.product_id} className="flex justify-between text-sm">
+                  <span className="text-[#4A4A6A] truncate mr-2">{item.products?.name} &times; {item.quantity}</span>
+                  <div className="text-right flex-shrink-0">
+                    {itemDiscount > 0 && <p className="text-gray-400 line-through text-xs">{formatINR(itemOriginal)}</p>}
+                    <span className={`font-medium ${itemDiscount > 0 ? 'text-green-600' : 'text-[#1A1A2E]'}`}>{formatINR(itemFinal)}</span>
+                  </div>
+                </div>
+              )
+            })}
           </div>
           <div className="border-t border-[#E8E0D5] pt-4 space-y-2 mb-5">
             {(() => {
@@ -536,23 +555,22 @@ export default function CheckoutPage() {
                 <>
                   <div className="flex justify-between text-sm">
                     <span className="text-[#4A4A6A]">Subtotal</span>
-                    <div className="text-right">
-                      {discount > 0 && (
-                        <p className="text-gray-400 line-through text-xs">{formatINR(total)}</p>
-                      )}
-                      <span className="text-[#1A1A2E] font-medium">{formatINR(total - discount)}</span>
-                    </div>
+                    <span className="text-[#1A1A2E] font-medium">{formatINR(total)}</span>
                   </div>
+                  {discount > 0 && (
+                    <div className="flex justify-between text-sm text-green-600">
+                      <span className="flex items-center gap-1"><Ticket size={11} /> {appliedPromo.promo.code}
+                        {appliedPromo.promo.applicable_category && (
+                          <span className="text-xs text-green-500 ml-1">({appliedPromo.promo.applicable_category} only)</span>
+                        )}
+                      </span>
+                      <span className="font-semibold">-{formatINR(discount)}</span>
+                    </div>
+                  )}
                   <div className="flex justify-between text-sm">
                     <span className="text-[#4A4A6A]">Shipping</span>
                     <span className="text-[#C9956C] font-medium">+{formatINR(shipping)}</span>
                   </div>
-                  {discount > 0 && (
-                    <div className="flex justify-between text-xs text-green-600">
-                      <span className="flex items-center gap-1"><Ticket size={11} /> {appliedPromo.promo.code} applied</span>
-                      <span className="font-semibold">-{formatINR(discount)} saved</span>
-                    </div>
-                  )}
                   {selectedAddr && (
                     <p className="text-[#8A8AAA] text-xs">
                       {["andhra pradesh","telangana","ap","ts"].some(s => (selectedAddr.state||"").toLowerCase().includes(s))
