@@ -1,12 +1,12 @@
 ﻿import { useState, useEffect, useRef } from "react"
 import { useNavigate, useLocation } from "react-router-dom"
 import { motion } from "framer-motion"
-import { MapPin, Plus, Check, CheckCircle, Upload, Copy, Smartphone, AlertCircle, Loader2, Zap, Ticket, X as XIcon } from "lucide-react"
+import { MapPin, Plus, Check, CheckCircle, Upload, Copy, Smartphone, AlertCircle, Loader2, Zap, Ticket, X as XIcon, Lock } from "lucide-react"
 import { useCartStore } from "../store/cartStore"
 import { useAuthStore } from "../store/authStore"
 import { saveOrder } from "../services/orderService"
 import { fetchAddresses, saveAddress } from "../services/addressService"
-import { validatePromoCode, recordPromoUse } from "../services/promoService"
+import { fetchActiveCodes, fetchUsedCodeIds, validatePromoCode, recordPromoUse, calcItemDiscount, checkEligibility } from "../services/promoService"
 import { supabase } from "../lib/supabase"
 import { formatINR } from "../utils/format"
 import toast from "react-hot-toast"
@@ -103,19 +103,27 @@ export default function CheckoutPage() {
   const [promoInput, setPromoInput] = useState("")
   const [appliedPromo, setAppliedPromo] = useState(null) // { promo, discountAmount }
   const [promoLoading, setPromoLoading] = useState(false)
+  const [allPromoCodes, setAllPromoCodes] = useState([])
+  const [usedCodeIds, setUsedCodeIds] = useState([])
 
   const cartCategories = items.map(i => i.products?.category).filter(Boolean)
 
-  const applyPromo = async () => {
-    if (!promoInput.trim()) return
+  // Load all active promo codes + used IDs once on mount
+  useEffect(() => {
+    fetchActiveCodes().catch(() => []).then(setAllPromoCodes)
+    fetchUsedCodeIds(user?.id).catch(() => []).then(setUsedCodeIds)
+  }, [user?.id])
+
+  const applyPromo = async (codeStr) => {
+    const code = (codeStr || promoInput).trim()
+    if (!code) return
     setPromoLoading(true)
     try {
-      const selectedAddr = addresses.find(a => a.id === selectedId)
-      const shipping = getShippingCost(selectedAddr)
       const result = await validatePromoCode({
-        code: promoInput.trim(),
+        code,
         userId: user?.id,
-        cartTotal: total + shipping,
+        cartSubtotal: total,   // discount base = product subtotal only, NOT including shipping
+        cartItems: items,
         cartCategories,
       })
       if (result.valid) {
@@ -556,34 +564,91 @@ export default function CheckoutPage() {
             })()}
           </div>
 
-          {/* Promo code input */}
-          {step === "payment" && (
-            <div className="mb-4">
-              {appliedPromo ? (
-                <div className="flex items-center justify-between bg-green-50 border border-green-200 rounded-xl px-3 py-2.5">
-                  <div className="flex items-center gap-2">
-                    <Ticket size={14} className="text-green-600" />
-                    <span className="text-green-700 text-sm font-semibold">{appliedPromo.promo.code}</span>
-                    <span className="text-green-600 text-xs">-{formatINR(appliedPromo.discountAmount)} saved</span>
-                  </div>
-                  <button onClick={removePromo} className="text-green-400 hover:text-red-500 transition-colors">
-                    <XIcon size={14} />
-                  </button>
+          {/* Promo code input + Available Offers */}
+          <div className="mb-4 space-y-3">
+            {/* Applied promo chip */}
+            {appliedPromo && (
+              <div className="flex items-center justify-between bg-green-50 border border-green-200 rounded-xl px-3 py-2.5">
+                <div className="flex items-center gap-2">
+                  <Ticket size={14} className="text-green-600" />
+                  <span className="text-green-700 text-sm font-semibold">{appliedPromo.promo.code}</span>
+                  <span className="text-green-600 text-xs">-{formatINR(appliedPromo.discountAmount)} saved</span>
                 </div>
-              ) : (
-                <div className="flex gap-2">
-                  <input value={promoInput} onChange={e => setPromoInput(e.target.value.toUpperCase())}
-                    onKeyDown={e => e.key === "Enter" && applyPromo()}
-                    placeholder="Promo code"
-                    className="flex-1 bg-white border border-[#E8E0D5] rounded-lg px-3 py-2 text-sm text-[#1A1A2E] placeholder-[#8A8AAA] focus:outline-none focus:border-[#C9956C]" />
-                  <button onClick={applyPromo} disabled={promoLoading || !promoInput.trim()}
-                    className="px-3 py-2 bg-[#C9956C] text-white text-sm font-semibold rounded-lg hover:bg-[#b5824f] disabled:opacity-50 flex items-center gap-1">
-                    {promoLoading ? <Loader2 size={13} className="animate-spin" /> : "Apply"}
-                  </button>
+                <button onClick={removePromo} className="text-green-400 hover:text-red-500 transition-colors">
+                  <XIcon size={14} />
+                </button>
+              </div>
+            )}
+
+            {/* Manual input */}
+            {!appliedPromo && (
+              <div className="flex gap-2">
+                <input value={promoInput} onChange={e => setPromoInput(e.target.value.toUpperCase())}
+                  onKeyDown={e => e.key === "Enter" && applyPromo()}
+                  placeholder="Enter promo code"
+                  className="flex-1 bg-white border border-[#E8E0D5] rounded-lg px-3 py-2 text-sm text-[#1A1A2E] placeholder-[#8A8AAA] focus:outline-none focus:border-[#C9956C]" />
+                <button onClick={() => applyPromo()} disabled={promoLoading || !promoInput.trim()}
+                  className="px-3 py-2 bg-[#C9956C] text-white text-sm font-semibold rounded-lg hover:bg-[#b5824f] disabled:opacity-50 flex items-center gap-1">
+                  {promoLoading ? <Loader2 size={13} className="animate-spin" /> : "Apply"}
+                </button>
+              </div>
+            )}
+
+            {/* Available promo codes list */}
+            {allPromoCodes.length > 0 && (
+              <div>
+                <p className="text-xs text-[#4A4A6A] font-semibold mb-2 flex items-center gap-1">
+                  <Ticket size={12} className="text-[#C9956C]" /> Available Offers
+                </p>
+                <div className="space-y-2">
+                  {allPromoCodes.map(code => {
+                    const { eligible, reason } = checkEligibility(code, {
+                      cartSubtotal: total,
+                      cartCategories,
+                      usedIds: usedCodeIds,
+                    })
+                    const discount = eligible ? calcItemDiscount(code, items) : 0
+                    return (
+                      <div key={code.id}
+                        className={`border rounded-xl px-3 py-2.5 transition-all ${
+                          eligible
+                            ? "bg-[#FFF8F0] border-[#C9956C]/40"
+                            : "bg-gray-50 border-gray-200 opacity-60"
+                        }`}>
+                        <div className="flex items-center justify-between gap-2">
+                          <div className="flex items-center gap-2 flex-1 min-w-0">
+                            <span className={`font-mono font-bold text-xs px-2 py-0.5 rounded flex-shrink-0 ${eligible ? "text-[#C9956C] bg-[#C9956C]/10" : "text-gray-400 bg-gray-200"}`}>
+                              {code.code}
+                            </span>
+                            <div className="min-w-0">
+                              <p className={`text-xs font-medium truncate ${eligible ? "text-[#1A1A2E]" : "text-gray-400"}`}>
+                                {code.discount_type === 'percentage' ? `${code.discount_value}% off` : `₹${code.discount_value} off`}
+                                {code.applicable_category ? ` on ${code.applicable_category}` : ""}
+                                {code.min_order_amount > 0 ? ` • Min ₹${code.min_order_amount.toLocaleString('en-IN')}` : ""}
+                              </p>
+                              {code.description && <p className="text-gray-400 text-xs truncate">{code.description}</p>}
+                              {!eligible && reason && <p className="text-red-400 text-xs">{reason}</p>}
+                              {eligible && discount > 0 && <p className="text-green-600 text-xs font-semibold">Save {formatINR(discount)}</p>}
+                            </div>
+                          </div>
+                          {eligible && !appliedPromo ? (
+                            <button
+                              onClick={() => { setPromoInput(code.code); applyPromo(code.code) }}
+                              disabled={promoLoading}
+                              className="flex-shrink-0 px-3 py-1 bg-[#C9956C] text-white text-xs font-bold rounded-lg hover:bg-[#b5824f] transition-all disabled:opacity-50">
+                              Apply
+                            </button>
+                          ) : (
+                            <Lock size={12} className="text-gray-300 flex-shrink-0" />
+                          )}
+                        </div>
+                      </div>
+                    )
+                  })}
                 </div>
-              )}
-            </div>
-          )}
+              </div>
+            )}
+          </div>
 
           <p className="text-[#8A8AAA] text-xs text-center">🔒 UPI Payment · Secure &amp; Safe</p>
         </div>

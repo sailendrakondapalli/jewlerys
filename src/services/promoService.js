@@ -1,6 +1,6 @@
 import { supabase } from '../lib/supabase'
 
-// Fetch all active promo codes (for product page display)
+// Fetch all active codes
 export async function fetchActiveCodes() {
   const { data, error } = await supabase
     .from('promo_codes')
@@ -21,8 +21,78 @@ export async function fetchAllCodes() {
   return data || []
 }
 
-// Validate a promo code for a given user and cart total + category
-export async function validatePromoCode({ code, userId, cartTotal, cartCategories = [] }) {
+// Get code IDs already used by this user
+export async function fetchUsedCodeIds(userId) {
+  if (!userId) return []
+  const { data, error } = await supabase
+    .from('promo_code_uses')
+    .select('code_id')
+    .eq('user_id', userId)
+  if (error) return []
+  return (data || []).map(r => r.code_id)
+}
+
+/**
+ * Calculate item-level discount for a promo code against cart items.
+ * Discount applies ONLY to product cost. Shipping is NEVER touched.
+ *
+ * @param {object} promo  - promo_codes row
+ * @param {Array}  items  - cart items: [{ products: { price, category }, quantity }]
+ * @returns {number} discountAmount in ₹ (integer)
+ */
+export function calcItemDiscount(promo, items) {
+  // Determine which items qualify
+  const qualifyingItems = items.filter(item => {
+    if (!promo.applicable_category) return true // all categories
+    return (item.products?.category || '').toLowerCase() === promo.applicable_category.toLowerCase()
+  })
+
+  if (qualifyingItems.length === 0) return 0
+
+  // Sum only qualifying items' product cost
+  const qualifyingSubtotal = qualifyingItems.reduce(
+    (s, item) => s + (item.products?.price || 0) * item.quantity, 0
+  )
+
+  if (promo.discount_type === 'percentage') {
+    return Math.floor((qualifyingSubtotal * promo.discount_value) / 100)
+  } else {
+    // Flat — cap at qualifying subtotal so we never discount more than the products cost
+    return Math.min(promo.discount_value, qualifyingSubtotal)
+  }
+}
+
+/**
+ * Check if a promo code's conditions are met (without network call).
+ * Used to enable/disable codes in the UI.
+ * Returns { eligible: bool, reason: string | null }
+ */
+export function checkEligibility(promo, { cartSubtotal, cartCategories, usedIds }) {
+  // Expiry
+  if (promo.expires_at && new Date(promo.expires_at) < new Date()) {
+    return { eligible: false, reason: 'Expired' }
+  }
+  // One-time already used
+  if (promo.is_one_time && usedIds.includes(promo.id)) {
+    return { eligible: false, reason: 'Already used' }
+  }
+  // Min order (on product subtotal only)
+  if (promo.min_order_amount && cartSubtotal < promo.min_order_amount) {
+    return { eligible: false, reason: `Min order ₹${promo.min_order_amount.toLocaleString('en-IN')} required` }
+  }
+  // Category
+  if (promo.applicable_category) {
+    const match = cartCategories.some(c => c.toLowerCase() === promo.applicable_category.toLowerCase())
+    if (!match) return { eligible: false, reason: `Only for ${promo.applicable_category}` }
+  }
+  return { eligible: true, reason: null }
+}
+
+/**
+ * Full server-side validation before order placement (authoritative check).
+ * Discount is calculated on product subtotal only — shipping excluded.
+ */
+export async function validatePromoCode({ code, userId, cartSubtotal, cartItems = [], cartCategories = [] }) {
   const { data: promo, error } = await supabase
     .from('promo_codes')
     .select('*')
@@ -32,27 +102,16 @@ export async function validatePromoCode({ code, userId, cartTotal, cartCategorie
 
   if (error || !promo) return { valid: false, message: 'Invalid or expired promo code' }
 
-  // Check expiry
   if (promo.expires_at && new Date(promo.expires_at) < new Date()) {
     return { valid: false, message: 'This promo code has expired' }
   }
-
-  // Check minimum order amount
-  if (promo.min_order_amount && cartTotal < promo.min_order_amount) {
+  if (promo.min_order_amount && cartSubtotal < promo.min_order_amount) {
     return { valid: false, message: `Minimum order of ₹${promo.min_order_amount.toLocaleString('en-IN')} required` }
   }
-
-  // Check category condition
   if (promo.applicable_category) {
-    const matches = cartCategories.some(c =>
-      c.toLowerCase() === promo.applicable_category.toLowerCase()
-    )
-    if (!matches) {
-      return { valid: false, message: `This code is only valid for ${promo.applicable_category} products` }
-    }
+    const matches = cartCategories.some(c => c.toLowerCase() === promo.applicable_category.toLowerCase())
+    if (!matches) return { valid: false, message: `This code is only valid for ${promo.applicable_category} products` }
   }
-
-  // Check one-time use
   if (promo.is_one_time && userId) {
     const { data: existing } = await supabase
       .from('promo_code_uses')
@@ -60,63 +119,35 @@ export async function validatePromoCode({ code, userId, cartTotal, cartCategorie
       .eq('code_id', promo.id)
       .eq('user_id', userId)
       .single()
-
-    if (existing) {
-      return { valid: false, message: 'You have already used this promo code' }
-    }
+    if (existing) return { valid: false, message: 'You have already used this promo code' }
   }
 
-  // Calculate discount
-  let discountAmount = 0
-  if (promo.discount_type === 'percentage') {
-    discountAmount = Math.floor((cartTotal * promo.discount_value) / 100)
-  } else {
-    discountAmount = Math.min(promo.discount_value, cartTotal)
-  }
-
+  const discountAmount = calcItemDiscount(promo, cartItems)
   return { valid: true, promo, discountAmount }
 }
 
 // Record usage after order placed
 export async function recordPromoUse({ codeId, userId, orderId }) {
   const { error } = await supabase.from('promo_code_uses').insert({
-    code_id: codeId,
-    user_id: userId,
-    order_id: orderId,
+    code_id: codeId, user_id: userId, order_id: orderId,
   })
   if (error) console.error('Failed to record promo use:', error.message)
 }
 
-// Admin: create code
+// Admin CRUD
 export async function createPromoCode(data) {
   const { error, data: created } = await supabase
     .from('promo_codes')
     .insert({ ...data, code: data.code.toUpperCase().trim() })
-    .select()
-    .single()
+    .select().single()
   if (error) throw error
   return created
 }
-
-// Admin: update code
 export async function updatePromoCode(id, data) {
   const { error } = await supabase.from('promo_codes').update(data).eq('id', id)
   if (error) throw error
 }
-
-// Admin: delete code
 export async function deletePromoCode(id) {
   const { error } = await supabase.from('promo_codes').delete().eq('id', id)
   if (error) throw error
-}
-
-// Get code IDs already used by this user (for one-time codes)
-export async function fetchUsedCodeIds(userId) {
-  if (!userId) return []
-  const { data, error } = await supabase
-    .from('promo_code_uses')
-    .select('code_id')
-    .eq('user_id', userId)
-  if (error) return []
-  return (data || []).map(r => r.code_id)
 }
