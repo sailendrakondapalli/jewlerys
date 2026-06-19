@@ -536,16 +536,21 @@ export default function CheckoutPage() {
                 <>
                   <div className="flex justify-between text-sm">
                     <span className="text-[#4A4A6A]">Subtotal</span>
-                    <span className="text-[#1A1A2E] font-medium">{formatINR(total)}</span>
+                    <div className="text-right">
+                      {discount > 0 && (
+                        <p className="text-gray-400 line-through text-xs">{formatINR(total)}</p>
+                      )}
+                      <span className="text-[#1A1A2E] font-medium">{formatINR(total - discount)}</span>
+                    </div>
                   </div>
                   <div className="flex justify-between text-sm">
                     <span className="text-[#4A4A6A]">Shipping</span>
                     <span className="text-[#C9956C] font-medium">+{formatINR(shipping)}</span>
                   </div>
                   {discount > 0 && (
-                    <div className="flex justify-between text-sm">
-                      <span className="text-green-600 flex items-center gap-1"><Ticket size={12} /> {appliedPromo.promo.code}</span>
-                      <span className="text-green-600 font-medium">-{formatINR(discount)}</span>
+                    <div className="flex justify-between text-xs text-green-600">
+                      <span className="flex items-center gap-1"><Ticket size={11} /> {appliedPromo.promo.code} applied</span>
+                      <span className="font-semibold">-{formatINR(discount)} saved</span>
                     </div>
                   )}
                   {selectedAddr && (
