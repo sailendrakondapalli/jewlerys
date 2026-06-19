@@ -118,10 +118,10 @@ export default function AdminPromoCodes() {
                   <motion.tr key={c.id} initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
                     className="hover:bg-gray-50/60 transition-colors">
                     <td className="px-5 py-3">
-                      <div>
-                        <span className="font-mono font-bold text-[#1B2B5E] text-sm bg-[#1B2B5E]/8 px-2 py-0.5 rounded">{c.code}</span>
-                        {c.description && <p className="text-gray-400 text-xs mt-0.5">{c.description}</p>}
-                        {c.is_one_time && <span className="text-xs text-[#C9956C] bg-[#C9956C]/10 px-1.5 py-0.5 rounded-full mt-0.5 inline-block">One-time</span>}
+                      <div className="flex flex-col gap-0.5">
+                        <span className="font-mono font-bold text-[#1B2B5E] text-sm bg-[#1B2B5E]/8 px-2 py-0.5 rounded w-fit">{c.code}</span>
+                        {c.description && <p className="text-gray-400 text-xs">{c.description}</p>}
+                        {c.is_one_time && <span className="text-xs text-[#C9956C] bg-[#C9956C]/10 px-2 py-0.5 rounded-full w-fit">One-time</span>}
                       </div>
                     </td>
                     <td className="px-5 py-3 font-semibold text-[#1B2B5E]">
