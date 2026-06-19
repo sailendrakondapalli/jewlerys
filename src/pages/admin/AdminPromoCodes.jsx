@@ -109,12 +109,12 @@ export default function AdminPromoCodes() {
           <table className="w-full text-sm">
             <thead>
               <tr className="border-b border-gray-100 bg-gray-50/60">
-                <th className="text-left text-gray-500 text-xs font-medium px-5 py-3">Code</th>
-                <th className="text-left text-gray-500 text-xs font-medium px-5 py-3">Discount</th>
-                <th className="text-left text-gray-500 text-xs font-medium px-5 py-3">Conditions</th>
-                <th className="text-left text-gray-500 text-xs font-medium px-5 py-3">Uses</th>
-                <th className="text-left text-gray-500 text-xs font-medium px-5 py-3">Status</th>
-                <th className="text-right text-gray-500 text-xs font-medium px-5 py-3">Actions</th>
+                <th className="text-left text-gray-700 text-sm font-semibold px-5 py-3">Code</th>
+                <th className="text-left text-gray-700 text-sm font-semibold px-5 py-3">Discount</th>
+                <th className="text-left text-gray-700 text-sm font-semibold px-5 py-3">Conditions</th>
+                <th className="text-left text-gray-700 text-sm font-semibold px-5 py-3">Uses</th>
+                <th className="text-left text-gray-700 text-sm font-semibold px-5 py-3">Status</th>
+                <th className="text-right text-gray-700 text-sm font-semibold px-5 py-3">Actions</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-100">
