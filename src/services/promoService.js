@@ -43,8 +43,16 @@ export async function fetchUsedCodeIds(userId) {
 export function calcItemDiscount(promo, items) {
   // Determine which items qualify
   const qualifyingItems = items.filter(item => {
-    if (!promo.applicable_category) return true // all categories
-    return (item.products?.category || '').toLowerCase() === promo.applicable_category.toLowerCase()
+    // Category filter
+    if (promo.applicable_category) {
+      if ((item.products?.category || '').toLowerCase() !== promo.applicable_category.toLowerCase()) return false
+    }
+    // If no category filter but has min_order_amount, treat it as a per-item min price threshold
+    // i.e. only items individually priced >= min_order_amount qualify for the discount
+    if (!promo.applicable_category && promo.min_order_amount) {
+      if ((item.products?.price || 0) < promo.min_order_amount) return false
+    }
+    return true
   })
 
   if (qualifyingItems.length === 0) return 0

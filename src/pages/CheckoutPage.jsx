@@ -525,9 +525,12 @@ export default function CheckoutPage() {
               const itemDiscount = appliedPromo
                 ? (() => {
                     const p = appliedPromo.promo
-                    const qualifies = !p.applicable_category ||
-                      (item.products?.category || '').toLowerCase() === p.applicable_category.toLowerCase()
-                    if (!qualifies) return 0
+                    // Category filter
+                    if (p.applicable_category &&
+                      (item.products?.category || '').toLowerCase() !== p.applicable_category.toLowerCase()) return 0
+                    // Per-item min price filter (when no category filter)
+                    if (!p.applicable_category && p.min_order_amount &&
+                      (item.products?.price || 0) < p.min_order_amount) return 0
                     if (p.discount_type === 'percentage') return Math.floor((itemOriginal * p.discount_value) / 100)
                     // flat: spread proportionally across qualifying items
                     return 0 // handled at subtotal level for flat

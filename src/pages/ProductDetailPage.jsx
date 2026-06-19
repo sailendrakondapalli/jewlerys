@@ -17,7 +17,7 @@ export default function ProductDetailPage() {
   const { id } = useParams()
   const navigate = useNavigate()
   const { user } = useAuthStore()
-  const { addToCart } = useCartStore()
+  const { addToCart, items: cartItems } = useCartStore()
   const { toggleWishlist, isWishlisted } = useWishlistStore()
   const { addProduct } = useRecentlyViewedStore()
 
@@ -39,8 +39,10 @@ export default function ProductDetailPage() {
   }, [id])
 
   const wishlisted = product ? isWishlisted(product.id) : false
+  const inCart = product ? cartItems.some(i => i.product_id === product.id) : false
 
   const handleAddToCart = async () => {
+    if (inCart) { navigate('/cart'); return }
     if (!user) { toast.error('Please login to add to cart'); navigate('/login'); return }
     await addToCart(product, user.id)
     toast.success('Added to cart!')
@@ -208,9 +210,13 @@ export default function ProductDetailPage() {
               <button
                 onClick={handleAddToCart}
                 disabled={product.stock === 0}
-                className="flex-1 flex items-center justify-center gap-2 py-3 bg-[#1B2B5E]/10 hover:bg-[#1B2B5E] text-[#1B2B5E] hover:text-white border border-[#1B2B5E]/40 rounded-xl font-semibold transition-all disabled:opacity-40 disabled:cursor-not-allowed"
+                className={`flex-1 flex items-center justify-center gap-2 py-3 rounded-xl font-semibold transition-all disabled:opacity-40 disabled:cursor-not-allowed ${
+                  inCart
+                    ? 'bg-green-600 hover:bg-green-700 text-white border border-green-600'
+                    : 'bg-[#1B2B5E]/10 hover:bg-[#1B2B5E] text-[#1B2B5E] hover:text-white border border-[#1B2B5E]/40'
+                }`}
               >
-                <ShoppingCart size={18} /> Add to Cart
+                <ShoppingCart size={18} /> {inCart ? 'Go to Cart' : 'Add to Cart'}
               </button>
               <button
                 onClick={handleBuyNow}

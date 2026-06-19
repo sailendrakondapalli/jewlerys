@@ -1,6 +1,6 @@
-﻿import { Link } from 'react-router-dom'
+﻿import { Link, useNavigate } from 'react-router-dom'
 import { motion } from 'framer-motion'
-import { Heart, ShoppingCart } from 'lucide-react'
+import { Heart, ShoppingCart, ArrowRight } from 'lucide-react'
 import { useAuthStore } from '../store/authStore'
 import { useCartStore } from '../store/cartStore'
 import { useWishlistStore } from '../store/wishlistStore'
@@ -11,12 +11,16 @@ const isVideo = (url) => url && /\.(mp4|mov|webm|ogg)(\?|$)/i.test(url)
 
 export default function ProductCard({ product }) {
   const { user } = useAuthStore()
-  const { addToCart } = useCartStore()
+  const { addToCart, items } = useCartStore()
   const { toggleWishlist, isWishlisted } = useWishlistStore()
+  const navigate = useNavigate()
   const wishlisted = isWishlisted(product.id)
+
+  const inCart = items.some(i => i.product_id === product.id)
 
   const handleAddToCart = async (e) => {
     e.preventDefault()
+    if (inCart) { navigate('/cart'); return }
     if (!user) { toast.error('Please login to add to cart'); return }
     try { await addToCart(product, user?.id); toast.success('Added to cart!') }
     catch (err) { toast.error(err.message || 'Failed to add to cart') }
@@ -78,8 +82,12 @@ export default function ProductCard({ product }) {
       </Link>
       <div className="px-3 pb-3">
         <button onClick={handleAddToCart} disabled={product.stock === 0}
-          className="w-full flex items-center justify-center gap-1.5 py-2 bg-[#1B2B5E] hover:bg-[#2A3F7E] text-white rounded-xl text-xs font-semibold transition-all disabled:opacity-40 disabled:cursor-not-allowed">
-          <ShoppingCart size={13} /> Add to Cart
+          className={`w-full flex items-center justify-center gap-1.5 py-2 rounded-xl text-xs font-semibold transition-all disabled:opacity-40 disabled:cursor-not-allowed ${
+            inCart
+              ? 'bg-green-600 hover:bg-green-700 text-white'
+              : 'bg-[#1B2B5E] hover:bg-[#2A3F7E] text-white'
+          }`}>
+          {inCart ? <><ArrowRight size={13} /> Go to Cart</> : <><ShoppingCart size={13} /> Add to Cart</>}
         </button>
       </div>
     </motion.div>
