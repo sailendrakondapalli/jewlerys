@@ -243,23 +243,6 @@ export default function HomePage() {
         <ReviewsSection />
       </ScrollReveal>
 
-      {/* Bridal Banner */}
-      <ScrollReveal>
-        <section className="relative overflow-hidden mx-4 mb-16 rounded-2xl">
-          <img src="https://images.unsplash.com/photo-1599643478518-a784e5dc4c8f?w=1400&q=80"
-            alt="Bridal collection" className="w-full h-64 object-cover"
-            onError={e => { e.target.src = "https://images.unsplash.com/photo-1515562153-702640cf-b037-4b1e-83b0-418397cf1be3?w=1400&q=80" }} />
-          <div className="absolute inset-0 bg-gradient-to-r from-[#1B2B5E]/85 to-[#1B2B5E]/30 flex items-center px-8">
-            <div>
-              <p className="text-[#C9956C] text-xs uppercase tracking-widest mb-2">Limited Edition</p>
-              <h3 className="text-3xl font-bold text-white mb-4" style={{ fontFamily: "Georgia, serif" }}>Bridal Collection</h3>
-              <Link to="/products?tags=bridal" className="px-6 py-2.5 bg-white text-[#1B2B5E] font-semibold rounded-lg hover:bg-[#FAF8F5] transition-all text-sm">
-                Explore Now
-              </Link>
-            </div>
-          </div>
-        </section>
-      </ScrollReveal>
     </>
   )
 }
