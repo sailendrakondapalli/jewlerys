@@ -4,7 +4,6 @@ import { HelmetProvider } from 'react-helmet-async'
 import { Toaster } from 'react-hot-toast'
 import Navbar from './components/Navbar'
 import Footer from './components/Footer'
-import OfferBanner from './components/OfferBanner'
 import ProtectedRoute from './components/ProtectedRoute'
 import AdminRoute from './components/AdminRoute'
 import AdminLayout from './components/admin/AdminLayout.jsx'
@@ -96,7 +95,6 @@ export default function App() {
           <Route path="/*" element={
             <div className="min-h-screen bg-[#FAF8F5] flex flex-col">
               <Navbar />
-              <OfferBanner />
               <main className="flex-1">
                 <ErrorBoundary>
                   <Suspense fallback={<PageLoader />}>

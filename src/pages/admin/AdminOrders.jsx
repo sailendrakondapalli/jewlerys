@@ -239,9 +239,44 @@ function OrderRow({ order, expanded, onToggle, onStatusUpdate, onVerify, onRejec
                       {item.products?.custom_id && <p className="text-[#1B2B5E] text-xs font-mono">ID: {item.products.custom_id}</p>}
                       <p className="text-gray-500 text-xs">x{item.quantity} &middot; {formatINR(item.price)}</p>
                     </div>
+                    <p className="text-[#1B2B5E] text-xs font-semibold flex-shrink-0">{formatINR(item.quantity * item.price)}</p>
                   </div>
                 ))}
               </div>
+
+              {/* Price breakdown */}
+              {(() => {
+                const itemsSubtotal = (order.order_items || []).reduce(
+                  (s, i) => s + (i.price || 0) * (i.quantity || 1), 0
+                )
+                const diff = Math.round((order.total_amount || 0) - itemsSubtotal)
+                const shipping = diff > 0 ? diff : 0
+                const discount = diff < 0 ? Math.abs(diff) : 0
+                return (
+                  <div className="bg-gray-50 border border-gray-200 rounded-xl p-3 space-y-1.5 text-xs">
+                    <div className="flex justify-between text-gray-500">
+                      <span>Items subtotal</span>
+                      <span>{formatINR(itemsSubtotal)}</span>
+                    </div>
+                    {shipping > 0 && (
+                      <div className="flex justify-between text-orange-500">
+                        <span>Shipping</span>
+                        <span>+{formatINR(shipping)}</span>
+                      </div>
+                    )}
+                    {discount > 0 && (
+                      <div className="flex justify-between text-green-600">
+                        <span>Discount applied</span>
+                        <span>-{formatINR(discount)}</span>
+                      </div>
+                    )}
+                    <div className="flex justify-between font-semibold text-[#1A1A2E] border-t border-gray-200 pt-1.5 mt-0.5">
+                      <span>Order Total</span>
+                      <span className="text-[#1B2B5E]">{formatINR(order.total_amount)}</span>
+                    </div>
+                  </div>
+                )
+              })()}
 
               {addr.full_name && (
                 <div className="bg-gray-50 rounded-lg p-2 text-xs text-gray-400">

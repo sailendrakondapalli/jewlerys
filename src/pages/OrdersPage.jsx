@@ -284,6 +284,42 @@ export default function OrdersPage() {
                         ))}
                       </div>
 
+                      {/* Price breakdown */}
+                      {(() => {
+                        const itemsSubtotal = (order.order_items || []).reduce(
+                          (s, i) => s + (i.price || 0) * (i.quantity || 1), 0
+                        )
+                        const diff = Math.round((order.total_amount || 0) - itemsSubtotal)
+                        // diff > 0 means shipping was added (and/or discount was less than shipping)
+                        // diff < 0 means discount exceeded shipping
+                        const shipping = diff > 0 ? diff : 0
+                        const discount = diff < 0 ? Math.abs(diff) : 0
+                        return (
+                          <div className="bg-white border border-[#E8E0D5] rounded-xl p-4 space-y-2 text-sm">
+                            <div className="flex justify-between text-[#4A4A6A]">
+                              <span>Items subtotal</span>
+                              <span>{formatINR(itemsSubtotal)}</span>
+                            </div>
+                            {shipping > 0 && (
+                              <div className="flex justify-between text-[#C9956C]">
+                                <span>Shipping</span>
+                                <span>+{formatINR(shipping)}</span>
+                              </div>
+                            )}
+                            {discount > 0 && (
+                              <div className="flex justify-between text-green-600">
+                                <span>Discount applied</span>
+                                <span>-{formatINR(discount)}</span>
+                              </div>
+                            )}
+                            <div className="flex justify-between font-semibold text-[#1A1A2E] border-t border-[#E8E0D5] pt-2 mt-1">
+                              <span>Order Total</span>
+                              <span className="text-[#1B2B5E] text-base">{formatINR(order.total_amount)}</span>
+                            </div>
+                          </div>
+                        )
+                      })()}
+
                       {addr.full_name && (
                         <div className="bg-white border border-[#E8E0D5] rounded-lg p-3 text-xs">
                           <p className="text-[#4A4A6A] font-medium mb-1">Delivery Address</p>
