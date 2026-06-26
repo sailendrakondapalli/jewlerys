@@ -179,8 +179,10 @@ export default function ProductDetailPage() {
               )}
               <div className="bg-[#F2EDE6] rounded-lg p-3">
                   <p className="text-[#8A8AAA] text-xs mb-1">Stock</p>
-                  <p className={`font-medium ${product.stock > 0 ? 'text-green-600' : 'text-red-500'}`}>
-                    {product.stock > 0 ? `${product.stock} available` : 'Out of Stock'}
+                  <p className={`font-medium ${(product.stock ?? 1) > 0 ? 'text-green-600' : 'text-red-500'}`}>
+                    {(product.stock ?? 1) > 0
+                      ? product.stock != null ? `${product.stock} available` : 'In Stock'
+                      : 'Out of Stock'}
                   </p>
                 </div>
             </div>
