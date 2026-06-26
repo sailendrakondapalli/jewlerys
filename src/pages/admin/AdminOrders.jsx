@@ -316,7 +316,7 @@ export default function AdminOrders() {
   const [searchParams] = useSearchParams()
   const filterToday = searchParams.get("filter") === "today"
 
-  useEffect(() => { loadOrders() }, [])
+  useEffect(() => { loadOrders(true) }, [])
   useEffect(() => {
     if (!orders.length) return
     if (filterToday) {
