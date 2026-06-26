@@ -42,10 +42,25 @@ export const useAdminStore = create((set, get) => ({
         itemsMap[item.order_id].push(item)
       })
     }
-    // Also fetch product details for order items
+
+    // Fetch product details for all product_ids found in order items
+    const productIds = [...new Set((items || []).map(i => i.product_id).filter(Boolean))]
+    let productsMap = {}
+    if (productIds.length > 0) {
+      const { data: prods } = await supabase
+        .from("products")
+        .select("id, name, images, price, category, custom_id")
+        .in("id", productIds)
+      if (prods) prods.forEach(p => { productsMap[p.id] = p })
+    }
+
+    // Merge product details into each order item
     const ordersWithItems = (data || []).map(o => ({
       ...o,
-      order_items: itemsMap[o.id] || []
+      order_items: (itemsMap[o.id] || []).map(item => ({
+        ...item,
+        products: productsMap[item.product_id] || item.products || null
+      }))
     }))
     set({ orders: ordersWithItems, loading: false, ordersLoaded: true })
   },

@@ -289,11 +289,21 @@ export default function OrdersPage() {
                         const itemsSubtotal = (order.order_items || []).reduce(
                           (s, i) => s + (i.price || 0) * (i.quantity || 1), 0
                         )
-                        const diff = Math.round((order.total_amount || 0) - itemsSubtotal)
-                        // diff > 0 means shipping was added (and/or discount was less than shipping)
-                        // diff < 0 means discount exceeded shipping
-                        const shipping = diff > 0 ? diff : 0
-                        const discount = diff < 0 ? Math.abs(diff) : 0
+                        const total = order.total_amount || 0
+                        // Try to reconstruct shipping + discount
+                        // Shipping is always 80 (AP/TS) or 100 (other states)
+                        let shipping = 0, discount = 0
+                        const diff80 = itemsSubtotal + 80 - total
+                        const diff100 = itemsSubtotal + 100 - total
+                        if (diff80 === 0) { shipping = 80; discount = 0 }
+                        else if (diff100 === 0) { shipping = 100; discount = 0 }
+                        else if (diff80 > 0) { shipping = 80; discount = diff80 }
+                        else if (diff100 > 0) { shipping = 100; discount = diff100 }
+                        else {
+                          // total > itemsSubtotal + 100 — shouldn't happen, just show diff
+                          shipping = total - itemsSubtotal
+                          discount = 0
+                        }
                         return (
                           <div className="bg-white border border-[#E8E0D5] rounded-xl p-4 space-y-2 text-sm">
                             <div className="flex justify-between text-[#4A4A6A]">
@@ -314,7 +324,7 @@ export default function OrdersPage() {
                             )}
                             <div className="flex justify-between font-semibold text-[#1A1A2E] border-t border-[#E8E0D5] pt-2 mt-1">
                               <span>Order Total</span>
-                              <span className="text-[#1B2B5E] text-base">{formatINR(order.total_amount)}</span>
+                              <span className="text-[#1B2B5E] text-base">{formatINR(total)}</span>
                             </div>
                           </div>
                         )

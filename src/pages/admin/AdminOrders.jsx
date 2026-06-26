@@ -249,9 +249,15 @@ function OrderRow({ order, expanded, onToggle, onStatusUpdate, onVerify, onRejec
                 const itemsSubtotal = (order.order_items || []).reduce(
                   (s, i) => s + (i.price || 0) * (i.quantity || 1), 0
                 )
-                const diff = Math.round((order.total_amount || 0) - itemsSubtotal)
-                const shipping = diff > 0 ? diff : 0
-                const discount = diff < 0 ? Math.abs(diff) : 0
+                const total = order.total_amount || 0
+                let shipping = 0, discount = 0
+                const diff80 = itemsSubtotal + 80 - total
+                const diff100 = itemsSubtotal + 100 - total
+                if (diff80 === 0) { shipping = 80; discount = 0 }
+                else if (diff100 === 0) { shipping = 100; discount = 0 }
+                else if (diff80 > 0) { shipping = 80; discount = diff80 }
+                else if (diff100 > 0) { shipping = 100; discount = diff100 }
+                else { shipping = total - itemsSubtotal; discount = 0 }
                 return (
                   <div className="bg-gray-50 border border-gray-200 rounded-xl p-3 space-y-1.5 text-xs">
                     <div className="flex justify-between text-gray-500">
@@ -272,7 +278,7 @@ function OrderRow({ order, expanded, onToggle, onStatusUpdate, onVerify, onRejec
                     )}
                     <div className="flex justify-between font-semibold text-[#1A1A2E] border-t border-gray-200 pt-1.5 mt-0.5">
                       <span>Order Total</span>
-                      <span className="text-[#1B2B5E]">{formatINR(order.total_amount)}</span>
+                      <span className="text-[#1B2B5E]">{formatINR(total)}</span>
                     </div>
                   </div>
                 )
